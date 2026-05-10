@@ -1104,7 +1104,6 @@ async function generateReport() {
 
 // ── 使用次數管理 ──
 const FREE_LIMIT = 2;
-const CERT_CODES = ['AROMA2025', 'THERAPIST88', 'FLORA2026']; // 可自訂多組認證碼
 
 function getUsageData() {
   const today = new Date().toDateString();
@@ -1154,9 +1153,7 @@ function showCertWall(clientData, prompt) {
       <div class="cert-input-wrap">
         <input type="text" id="certInput" placeholder="請輸入芳療師認證碼" autocomplete="off"
           style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
-        <button class="btn btn-primary" onclick="verifyCert('${encodeURIComponent(JSON.stringify({name:clientData.name,year:clientData.year,month:clientData.month,day:clientData.day}))}', prompt_placeholder)">
-          解鎖使用
-        </button>
+        <button class="btn btn-primary">解鎖使用</button>
       </div>
       <div id="certError" class="cert-error" style="display:none">認證碼不正確，請確認後再試</div>
       <div class="cert-divider">
@@ -1230,17 +1227,28 @@ async function verifyCertAndGenerate() {
 const WORKER_URL = 'YOUR_WORKER_URL';
 // 例如：const WORKER_URL = 'https://aroma-therapist-api.yourname.workers.dev';
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 async function callGemini(prompt, clientData) {
   const { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote } = clientData;
   try {
-    // 打 Cloudflare Worker，不直接打 Gemini（API Key 安全）
     const res = await fetch(`${WORKER_URL}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
+    if (!res.ok) throw new Error(`Worker error ${res.status}`);
     const data = await res.json();
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    if (data.error) throw new Error(data.error);
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!raw) throw new Error('Empty Gemini response');
     const clean = raw.replace(/```json|```/g, '').trim();
     const result = JSON.parse(clean);
     incrementUsage();
@@ -1297,7 +1305,7 @@ function renderReport(r, d) {
     <div id="printArea">
 
     <div class="report-header">
-      <div class="report-name">${d.name} 的專屬香氛報告</div>
+      <div class="report-name">${escapeHtml(d.name)} 的專屬香氛報告</div>
       <div class="report-date-line">芳療諮詢日期 ${today} ｜ 專業調香師出具</div>
       <div class="element-badges">
         <span class="badge ${elementBadgeClass[d.element]||'badge-earth'}">五行 · ${d.element}</span>

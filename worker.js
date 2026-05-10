@@ -34,7 +34,7 @@ export default {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+              generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
             })
           }
         );
