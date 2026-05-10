@@ -941,19 +941,68 @@ const scentMap = {
   spice:    { name:'辛香·溫暖', oils:['黑胡椒','薑','肉桂葉','丁香花苞'] },
 };
 
-// Five Elements
-// 天干：個位 4=甲 5=乙 6=丙 7=丁 8=戊 9=己 0=庚 1=辛 2=壬 3=癸
-function getFiveElement(year) {
-  const stemMap = {
-    4:'甲', 5:'乙', 6:'丙', 7:'丁', 8:'戊',
-    9:'己', 0:'庚', 1:'辛', 2:'壬', 3:'癸'
+// ══════════════════════════════════════════════
+// 日柱天干五行（萬年曆精準算法）
+// 原理：以已知基準日推算任意日期的日干支序號
+// 基準：西元 1900年1月1日 = 甲戌日 = 天干序號 0（甲）
+// 天干循環 10，地支循環 12，干支循環 60
+// ══════════════════════════════════════════════
+
+// 計算從基準日到目標日的天數（儒略日差）
+function dateToJulianDay(y, m, d) {
+  // 標準儒略日算法
+  const a = Math.floor((14 - m) / 12);
+  const yr = y + 4800 - a;
+  const mo = m + 12 * a - 3;
+  return d + Math.floor((153 * mo + 2) / 5) + 365 * yr +
+    Math.floor(yr / 4) - Math.floor(yr / 100) + Math.floor(yr / 400) - 32045;
+}
+
+// 基準：1900年1月1日 儒略日
+const BASE_JD = dateToJulianDay(1900, 1, 1);
+// 1900/1/1 = 甲戌日，天干「甲」=0，地支「戌」=10
+const BASE_STEM_IDX   = 0;
+const BASE_BRANCH_IDX = 10;
+
+// 天干序號 → 五行
+const STEM_ELEMENT = ['木','木','火','火','土','土','金','金','水','水'];
+// 天干序號 → 天干字
+const STEM_NAME = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+// 地支序號 → 地支字
+const BRANCH_NAME = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+
+/**
+ * 取得日柱天干五行（最精準，以出生日期當天天干為準）
+ * 基準：1900/1/1 = 甲戌日（天干甲=0，地支戌=10）
+ * 已驗證：1989/9/27=庚=金、1990/9/12=庚辰=金
+ */
+function getDayStemInfo(year, month, day) {
+  const jd   = dateToJulianDay(year, month, day);
+  const diff = jd - BASE_JD;
+  const stemIdx   = ((BASE_STEM_IDX   + diff) % 10 + 10) % 10;
+  const branchIdx = ((BASE_BRANCH_IDX + diff) % 12 + 12) % 12;
+  return {
+    element: STEM_ELEMENT[stemIdx],
+    stem:    STEM_NAME[stemIdx],
+    branch:  BRANCH_NAME[branchIdx],
+    ganzhi:  STEM_NAME[stemIdx] + BRANCH_NAME[branchIdx],
   };
-  const elementMap = {
-    '甲':'木','乙':'木','丙':'火','丁':'火','戊':'土',
-    '己':'土','庚':'金','辛':'金','壬':'水','癸':'水'
-  };
-  const stem = stemMap[year % 10];
-  return elementMap[stem];
+}
+
+// 向下相容：年份五行（天干，僅供備用）
+function getFiveElement(year, month, day) {
+  // 優先用日柱天干（最精準）
+  if (month && day) return getDayStemInfo(year, month, day).element;
+  // fallback：年干
+  const stemMap = { 4:'甲',5:'乙',6:'丙',7:'丁',8:'戊',9:'己',0:'庚',1:'辛',2:'壬',3:'癸' };
+  const elementMap = { '甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水' };
+  return elementMap[stemMap[year % 10]];
+}
+
+function getTianganElement(year) {
+  const stemMap = { 4:'甲',5:'乙',6:'丙',7:'丁',8:'戊',9:'己',0:'庚',1:'辛',2:'壬',3:'癸' };
+  const elementMap = { '甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水' };
+  return elementMap[stemMap[year % 10]];
 }
 
 function getZodiacSign(month, day) {
@@ -1050,54 +1099,55 @@ async function generateReport() {
   const energy = document.getElementById('energySlider').value;
   const mood = document.getElementById('moodSlider').value;
 
-  const element = getFiveElement(year);
-  const zodiac = getZodiacSign(month, day);
+  const dayInfo   = getDayStemInfo(year, month, day);
+  const element   = dayInfo.element;   // 日柱天干五行（最精準）
+  const dayStem   = dayInfo.stem;      // 天干字，例如「庚」
+  const dayGanzhi = dayInfo.ganzhi;    // 干支，例如「庚戌」
+  const tiangan   = getTianganElement(year); // 年干五行（備用）
+  const zodiac    = getZodiacSign(month, day);
   const solarTerm = getSolarTerm(month, day);
-  const eData = elementScents[element];
+  const eData     = elementScents[element] || elementScents['木'];
   const zodiacNote = zodiacBlend[zodiac] || '香氣選擇貼合當下季節能量';
   const scentNames = selectedScents.map(k => scentMap[k]?.name).filter(Boolean);
 
   // Build prompt first
   const symptomList = symptoms.length ? symptoms.join('、') : '無特別症狀';
-  const symptomCount = symptoms.length || 1;
   const prompt = `你是一位擁有20年經驗的資深芳療師，精通中醫五行體質、西方芳療學與植物精油化學。請根據以下客戶完整資料，生成一份詳盡的個人化精油配方諮詢報告。
-
-【重要：以下資料已由系統確認，請直接使用，禁止自行重新推算或更改】
-五行：${element}（系統已依出生年天干計算確認）
-星座：${zodiac}座
-節氣：${solarTerm}
 
 【客戶資料】
 姓名：${name} | 出生：${year}年${month}月${day}日
-五行：${element} | 星座：${zodiac}座 | 節氣：${solarTerm}
-調香目的：${useCase} | 偏好香氣：${scentNames.join('、')||'未指定'} | 排斥：${dislike||'無'}
-症狀（共${symptomCount}項）：${symptomList}
+日柱干支：${dayGanzhi} | 日主五行：${element}（天干「${dayStem}」）
+年干五行：${tiangan} | 星座：${zodiac}座 | 節氣：${solarTerm}
+目的：${useCase} | 偏好香氣：${scentNames.join('、')||'未指定'} | 排斥：${dislike||'無'}
+症狀：${symptomList}
 睡眠：${sleep}/10 | 壓力：${stress}/10 | 能量：${energy}/10 | 情緒：${mood}/10
 補充：${extra||'無'}
 
-【輸出規則】
-1. 只回傳純JSON，開頭必須是 { 結尾必須是 }，禁止任何markdown、說明文字
-2. symptom_analysis 每個症狀必須對應不同精油（禁止重複使用同一精油）
-3. 五行、星座、節氣欄位必須照上方確認值填寫，不可更改
+【重要規則】
+1. 五行分析以「日主五行：${element}（${dayStem}）」為核心，這是最精準的命理依據
+2. 配方5支精油必須各不相同，禁止重複使用同一支精油
+3. 不可全部都用薰衣草，要根據症狀和體質選擇多元化精油
+4. 偏好香氣方向（${scentNames.join('、')||'未指定'}）要反映在配方選擇中
+5. 每支精油的reason必須結合客戶具體症狀說明
 
-請輸出以下JSON：
+請只回傳JSON，不含任何markdown符號：
 {
-  "constitution": "150字以上體質深度分析，以五行${element}天干特質為核心，結合${zodiac}座能量與${solarTerm}節氣，說明此人身心特質與容易失衡的方向",
-  "symptom_analysis": [${symptoms.map(s=>`{"symptom":"${s}","oil":"針對此症狀最合適且與其他症狀不重複的精油（中英文）","mechanism":"此精油改善此症狀的35字芳療機制"}`).join(',')||'{"symptom":"體質調理","oil":"薰衣草 Lavender","mechanism":"平衡自律神經，促進身心放鬆與修復"}'}],
+  "constitution": "150字以上體質深度分析，以日主五行${element}（天干${dayStem}）為核心，融合${zodiac}座能量、${solarTerm}節氣影響，說明身心特質與容易失衡方向",
+  "symptom_analysis": [{"symptom":"症狀名","oil":"對應精油（每個症狀用不同精油）","mechanism":"35字芳療機制說明"}],
   "formula": [
-    {"layer":"前調","oil":"精油名（中英文）","pct":25,"property":"主要功效成分","reason":"35字結合${element}體質與症狀的選用理由"},
-    {"layer":"前調","oil":"精油名（中英文）","pct":10,"property":"主要功效成分","reason":"35字選用理由"},
-    {"layer":"中調","oil":"精油名（中英文）","pct":30,"property":"主要功效成分","reason":"35字選用理由"},
-    {"layer":"中調","oil":"精油名（中英文）","pct":20,"property":"主要功效成分","reason":"35字選用理由"},
-    {"layer":"後調","oil":"精油名（中英文）","pct":15,"property":"主要功效成分","reason":"35字選用理由"}
+    {"layer":"前調","oil":"精油A（具體名稱）","pct":25,"property":"主要功效成分","reason":"35字結合客戶症狀的選用理由"},
+    {"layer":"前調","oil":"精油B（與A不同）","pct":10,"property":"主要功效成分","reason":"35字選用理由"},
+    {"layer":"中調","oil":"精油C（與AB不同）","pct":30,"property":"主要功效成分","reason":"35字選用理由"},
+    {"layer":"中調","oil":"精油D（與ABC不同）","pct":20,"property":"主要功效成分","reason":"35字選用理由"},
+    {"layer":"後調","oil":"精油E（與ABCD不同）","pct":15,"property":"主要功效成分","reason":"35字選用理由"}
   ],
   "blend_note": "80字配方協同說明",
   "lifestyle": "50字生活芳療建議與最佳使用時機",
   "diffuser": "具體擴香：水量+滴數+時長+時段",
   "roller": "滾珠：比例+基底油選擇理由+塗抹部位+手法+頻率",
   "massage": "按摩：濃度+基底油+重點部位+手法+頻率",
-  "bath": "精油浴建議（如適合此體質則填寫，否則填null）",
-  "caution": "具體注意事項：光敏性、禁忌族群、保存方式",
+  "bath": "精油浴建議（如適合此體質）",
+  "caution": "具體注意事項：光敏、禁忌族群、保存方式",
   "next_steps": "30天追蹤建議",
   "affirmation": "一句溫暖詩意的專屬肯定語"
 }`;
@@ -1107,7 +1157,7 @@ async function generateReport() {
   document.getElementById('loading').style.display = 'block';
 
   // ── 使用次數檢查 ──
-  const clientData = { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote };
+  const clientData = { name, year, month, day, element, dayStem, dayGanzhi, tiangan, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote };
   if (!checkUsageLimit(clientData, prompt)) return;
 
   await callGemini(prompt, clientData);
@@ -1115,6 +1165,7 @@ async function generateReport() {
 
 // ── 使用次數管理 ──
 const FREE_LIMIT = 2;
+const CERT_CODES = ['AROMA2025', 'THERAPIST88', 'FLORA2026']; // 可自訂多組認證碼
 
 function getUsageData() {
   const today = new Date().toDateString();
@@ -1164,7 +1215,9 @@ function showCertWall(clientData, prompt) {
       <div class="cert-input-wrap">
         <input type="text" id="certInput" placeholder="請輸入芳療師認證碼" autocomplete="off"
           style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
-        <button class="btn btn-primary">解鎖使用</button>
+        <button class="btn btn-primary" onclick="verifyCert('${encodeURIComponent(JSON.stringify({name:clientData.name,year:clientData.year,month:clientData.month,day:clientData.day}))}', prompt_placeholder)">
+          解鎖使用
+        </button>
       </div>
       <div id="certError" class="cert-error" style="display:none">認證碼不正確，請確認後再試</div>
       <div class="cert-divider">
@@ -1236,26 +1289,6 @@ async function verifyCertAndGenerate() {
 // ── Cloudflare Worker URL ──
 // 部署完成後，把下面這行換成你的 Worker 網址
 const WORKER_URL = 'https://aroma-therapist-api.fanyayajoin.workers.dev';
-// 例如：const WORKER_URL = 'https://aroma-therapist-api.yourname.workers.dev';
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function extractJson(raw) {
-  // 移除 markdown code block
-  let s = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-  // 找 JSON 物件的起始與結束
-  const start = s.indexOf('{');
-  const end = s.lastIndexOf('}');
-  if (start >= 0 && end > start) s = s.slice(start, end + 1);
-  return JSON.parse(s);
-}
 
 async function callGemini(prompt, clientData) {
   const { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote } = clientData;
@@ -1265,16 +1298,22 @@ async function callGemini(prompt, clientData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
-    if (!res.ok) throw new Error(`Worker error ${res.status}`);
+
+    if (!res.ok) throw new Error(`Worker error: ${res.status}`);
+
     const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!raw) throw new Error('Empty Gemini response');
-    const result = extractJson(raw);
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!raw) throw new Error('Empty response');
+
+    // 更強的 JSON 清理：擷取第一個 { } 區塊
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON found');
+    const result = JSON.parse(jsonMatch[0]);
+
     incrementUsage();
     renderReport(result, { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood });
   } catch(e) {
-    console.error(e);
+    console.error('API Error:', e.message);
     renderFallback({ name, year, month, day, element, zodiac, solarTerm, eData, zodiacNote, scentNames, symptoms });
   }
 }
@@ -1325,12 +1364,13 @@ function renderReport(r, d) {
     <div id="printArea">
 
     <div class="report-header">
-      <div class="report-name">${escapeHtml(d.name)} 的專屬香氛報告</div>
+      <div class="report-name">${d.name} 的專屬香氛報告</div>
       <div class="report-date-line">芳療諮詢日期 ${today} ｜ 專業調香師出具</div>
       <div class="element-badges">
-        <span class="badge ${elementBadgeClass[d.element]||'badge-earth'}">五行 · ${d.element}</span>
+        <span class="badge ${elementBadgeClass[d.element]||'badge-earth'}">日主 · ${d.dayStem||''}（${d.element}）</span>
         <span class="badge badge-water">星座 · ${d.zodiac}座</span>
         <span class="badge badge-wood">節氣 · ${d.solarTerm}</span>
+        ${d.dayGanzhi ? `<span class="badge badge-metal">日柱 · ${d.dayGanzhi}</span>` : ''}
         ${d.scentNames.map(s=>`<span class="badge badge-earth">${s}</span>`).join('')}
       </div>
       ${r.affirmation?`<p class="report-affirmation">"${r.affirmation}"</p>`:''}
@@ -1444,339 +1484,129 @@ function shareToLine() {
   const formulaText = r.formula?.map(f => `  ${f.layer} ${f.oil} ${f.pct}%`).join('\n') || '';
   const sympText = r.symptom_analysis?.map(s => `  • ${s.symptom} → ${s.oil}`).join('\n') || '';
 
-  // 完整報告文字
-  const fullText = `🌿 ${d.name} 的專屬芳療配方報告
+  const text = `🌿 ${d.name} 的專屬芳療配方報告
 📅 諮詢日期：${today}
 ━━━━━━━━━━━━━━
 ✦ 體質分析
 五行·${d.element}  ${d.zodiac}座  ${d.solarTerm}
 
-${r.constitution || ''}
+${r.constitution}
 
 ━━━━━━━━━━━━━━
-${sympText ? `✦ 症狀對應精油\n${sympText}\n\n━━━━━━━━━━━━━━\n` : ''}✦ 專屬精油配方
+${sympText ? `✦ 症狀對應精油\n${sympText}\n\n━━━━━━━━━━━━━━\n` : ''}
+✦ 專屬精油配方
 ${formulaText}
-${r.blend_note ? '\n✦ ' + r.blend_note : ''}
+
+${r.blend_note ? '✦ ' + r.blend_note : ''}
 
 ━━━━━━━━━━━━━━
 ✦ 使用建議
-💨 擴香：${r.diffuser || ''}
-🧴 滾珠：${r.roller || ''}
-🤲 按摩：${r.massage || ''}
+💨 擴香：${r.diffuser||''}
+🧴 滾珠：${r.roller||''}
+🤲 按摩：${r.massage||''}
 
-⚠ ${r.caution || '請依專業芳療師建議使用'}
+⚠ ${r.caution||'請依專業芳療師建議使用'}
 
 ━━━━━━━━━━━━━━
-"${r.affirmation || ''}"
+"${r.affirmation||''}"
+
 — 由專業芳療師出具`;
 
-  // LINE URL 用較短摘要（URL有長度限制）
-  const shortText = `🌿 ${d.name} 芳療配方（${today}）\n五行·${d.element} ${d.zodiac}座\n\n${formulaText}\n\n"${r.affirmation || ''}"`;
-  const lineUrl = 'https://line.me/R/msg/text/?' + encodeURIComponent(shortText);
-
-  // 複製全文到剪貼板
-  const doCopy = (text) => {
-    if (navigator.clipboard && window.isSecureContext) {
-      return navigator.clipboard.writeText(text);
-    }
-    // fallback：用 textarea
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    return Promise.resolve();
-  };
-
-  doCopy(fullText).then(() => {
+  navigator.clipboard.writeText(text).then(() => {
     const toast = document.getElementById('lineToast');
-    toast.textContent = '✓ 已複製完整報告，請開啟 LINE 貼上傳送';
     toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 4000);
-    // 嘗試開啟 LINE（行動裝置有效）
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    // Open LINE on mobile
+    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
     window.open(lineUrl, '_blank');
   }).catch(() => {
-    // 複製失敗：顯示文字讓用戶手動複製
-    const ta = document.createElement('textarea');
-    ta.value = fullText;
-    ta.style.cssText = 'width:100%;height:200px;margin-top:12px;font-size:12px';
-    ta.readOnly = true;
-    const box = document.createElement('div');
-    box.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
-    box.innerHTML = '<div style="background:#fff;border-radius:12px;padding:20px;width:100%;max-width:500px"><p style="margin:0 0 8px;font-weight:600">請手動複製以下內容貼到 LINE：</p></div>';
-    box.firstChild.appendChild(ta);
-    const btn = document.createElement('button');
-    btn.textContent = '關閉';
-    btn.style.cssText = 'margin-top:10px;padding:8px 20px;border:1px solid #ccc;border-radius:6px;cursor:pointer;width:100%';
-    btn.onclick = () => document.body.removeChild(box);
-    box.firstChild.appendChild(btn);
-    document.body.appendChild(box);
-    ta.select();
+    alert('請手動複製以下內容：\n\n' + text);
   });
 }
 
 // ── PDF DOWNLOAD ──
+// ── PDF 下載（html2canvas 截圖法，中文完全正常）──
 async function downloadPDF() {
   const btn = document.querySelector('.btn-pdf');
-  btn.textContent = '⏳ 產生中…';
+  btn.innerHTML = '⏳ 產生中…';
   btn.disabled = true;
 
-  // Load jsPDF
-  if (!window.jspdf) {
-    await new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-      s.onload = res; s.onerror = rej;
-      document.head.appendChild(s);
-    });
-  }
-
-  const { jsPDF } = window.jspdf;
-  const r = currentReportData;
   const d = currentClientData;
   const today = new Date().toLocaleDateString('zh-TW');
 
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const W = 210, margin = 18, cw = W - margin * 2;
-  let y = 0;
+  try {
+    // 動態載入 html2canvas 和 jsPDF
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
-  // Color palette
-  const sage = [138, 158, 127];
-  const earth = [196, 168, 130];
-  const cream = [247, 243, 237];
-  const textDark = [44, 42, 37];
-  const textMid = [92, 86, 73];
-  const textLight = [156, 148, 134];
+    const printArea = document.getElementById('printArea');
 
-  function newPage() {
-    doc.addPage();
-    y = 20;
-    // Subtle header line on new pages
-    doc.setDrawColor(...sage);
-    doc.setLineWidth(0.3);
-    doc.line(margin, 8, W - margin, 8);
-  }
+    // 暫時隱藏不列印的元素
+    const noPrint = document.querySelectorAll('.no-print-hide');
+    noPrint.forEach(el => el.style.display = 'none');
 
-  function checkY(needed) {
-    if (y + needed > 272) newPage();
-  }
-
-  function sectionTitle(title) {
-    checkY(16);
-    doc.setFillColor(...sage);
-    doc.roundedRect(margin, y, cw, 8, 1.5, 1.5, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(255, 255, 255);
-    doc.text(title, margin + 6, y + 5.5);
-    y += 12;
-  }
-
-  function bodyText(text, indent = 0) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...textMid);
-    const lines = doc.splitTextToSize(text, cw - indent);
-    checkY(lines.length * 5 + 4);
-    doc.text(lines, margin + indent, y);
-    y += lines.length * 5 + 3;
-  }
-
-  function smallText(text, color = textLight) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...color);
-    const lines = doc.splitTextToSize(text, cw);
-    doc.text(lines, margin, y);
-    y += lines.length * 4.5 + 2;
-  }
-
-  // ── COVER HEADER ──
-  // Top gradient bar
-  doc.setFillColor(...sage);
-  doc.rect(0, 0, W, 38, 'F');
-  doc.setFillColor(...earth);
-  doc.rect(0, 36, W, 2, 'F');
-
-  // Title
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.setTextColor(255, 255, 255);
-  doc.text(`${d.name}`, margin, 16);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.text('的專屬天然精油芳療配方報告', margin, 24);
-  doc.setFontSize(8);
-  doc.setTextColor(220, 235, 215);
-  doc.text(`諮詢日期 ${today}  ｜  五行·${d.element}  ｜  ${d.zodiac}座  ｜  ${d.solarTerm}`, margin, 32);
-
-  y = 46;
-
-  // Affirmation box
-  if (r.affirmation) {
-    doc.setFillColor(...cream);
-    doc.setDrawColor(...earth);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(margin, y, cw, 12, 2, 2, 'FD');
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(9);
-    doc.setTextColor(...textMid);
-    const aff = doc.splitTextToSize(`"${r.affirmation}"`, cw - 8);
-    doc.text(aff, margin + 4, y + 7);
-    y += 17;
-  }
-
-  // ── 體質分析 ──
-  sectionTitle('✦  體質深度分析');
-  bodyText(r.constitution || '');
-  y += 3;
-
-  // ── 症狀對應 ──
-  if (r.symptom_analysis && r.symptom_analysis.length) {
-    sectionTitle('✦  症狀對應精油說明');
-    r.symptom_analysis.forEach(s => {
-      checkY(14);
-      doc.setFillColor(245, 240, 232);
-      doc.roundedRect(margin, y, cw, 11, 1.5, 1.5, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor(...sage);
-      doc.text(s.symptom, margin + 4, y + 4.5);
-      doc.setTextColor(...earth);
-      doc.text(`→  ${s.oil}`, margin + 40, y + 4.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(...textMid);
-      const mLines = doc.splitTextToSize(s.mechanism || '', cw - 8);
-      doc.text(mLines, margin + 4, y + 9);
-      y += 14;
+    // 截圖
+    const canvas = await html2canvas(printArea, {
+      scale: 2,           // 2x 解析度，文字清晰
+      useCORS: true,
+      backgroundColor: '#FDFAF6',
+      scrollX: 0,
+      scrollY: -window.scrollY,
+      windowWidth: 860,   // 固定寬度，符合報告設計
+      logging: false,
     });
-    y += 3;
+
+    // 還原隱藏元素
+    noPrint.forEach(el => el.style.display = '');
+
+    const { jsPDF } = window.jspdf;
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+    // A4 尺寸計算
+    const pdfW = 210;
+    const pdfH = (canvas.height * pdfW) / canvas.width;
+    const pageH = 297; // A4 高度 mm
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    let position = 0;
+    let remaining = pdfH;
+
+    // 分頁處理
+    while (remaining > 0) {
+      doc.addImage(imgData, 'JPEG', 0, position, pdfW, pdfH);
+      remaining -= pageH;
+      position -= pageH;
+      if (remaining > 0) doc.addPage();
+    }
+
+    // Footer 每頁
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(156, 148, 134);
+      doc.text('本報告由專業芳療師依據客戶個人體質出具，僅供參考，不替代醫療建議。', 18, 292);
+      doc.text(`${i} / ${pageCount}`, 192, 292, { align: 'right' });
+    }
+
+    doc.save(`${d.name}_芳療配方報告_${today.replace(/\//g,'')}.pdf`);
+
+  } catch(e) {
+    console.error('PDF error:', e);
+    alert('PDF 產生失敗，請嘗試使用瀏覽器列印（Ctrl+P）');
   }
 
-  // ── 配方 ──
-  sectionTitle('✦  專屬精油配方');
-  const layerColor = { '前調': sage, '中調': earth, '後調': [139, 158, 149] };
-  r.formula?.forEach(f => {
-    checkY(20);
-    const lc = layerColor[f.layer] || textMid;
-    doc.setFillColor(247, 243, 237);
-    doc.roundedRect(margin, y, cw, 18, 2, 2, 'F');
-    doc.setFillColor(...lc);
-    doc.roundedRect(margin, y, 14, 18, 2, 2, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.setTextColor(255, 255, 255);
-    doc.text(f.layer, margin + 2, y + 10.5, { maxWidth: 10, align: 'center' });
-
-    // Oil name + pct
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(...textDark);
-    doc.text(f.oil, margin + 18, y + 6);
-    doc.setFontSize(10);
-    doc.setTextColor(...sage);
-    doc.text(`${f.pct}%`, W - margin - 2, y + 6, { align: 'right' });
-
-    // Property
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...textLight);
-    doc.text(f.property || '', margin + 18, y + 11);
-
-    // Reason
-    doc.setFontSize(7.5);
-    doc.setTextColor(...textMid);
-    const rLines = doc.splitTextToSize(f.reason || '', cw - 24);
-    doc.text(rLines[0] || '', margin + 18, y + 15.5);
-    y += 21;
-  });
-
-  if (r.blend_note) {
-    checkY(14);
-    doc.setFillColor(235, 242, 232);
-    doc.roundedRect(margin, y, cw, 10, 2, 2, 'F');
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(8);
-    doc.setTextColor(...textMid);
-    const bnLines = doc.splitTextToSize('✦ ' + r.blend_note, cw - 8);
-    doc.text(bnLines[0], margin + 4, y + 6.5);
-    y += 14;
-  }
-
-  // ── 生活建議 ──
-  if (r.lifestyle) {
-    sectionTitle('✦  生活芳療建議');
-    bodyText(r.lifestyle);
-    y += 3;
-  }
-
-  // ── 使用方式 ──
-  sectionTitle('✦  建議使用方式');
-  const usages = [
-    { icon: '💨', title: '擴  香', text: r.diffuser },
-    { icon: '🧴', title: '滾珠瓶', text: r.roller },
-    { icon: '🤲', title: '按  摩', text: r.massage },
-    r.bath ? { icon: '🛁', title: '精油浴', text: r.bath } : null,
-  ].filter(Boolean);
-
-  usages.forEach(u => {
-    checkY(22);
-    doc.setFillColor(247, 243, 237);
-    doc.roundedRect(margin, y, cw, 20, 2, 2, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(...sage);
-    doc.text(u.title, margin + 4, y + 7);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(...textMid);
-    const uLines = doc.splitTextToSize(u.text || '', cw - 28);
-    doc.text(uLines, margin + 28, y + 7);
-    y += 23;
-  });
-
-  // Caution
-  if (r.caution) {
-    checkY(14);
-    doc.setFillColor(255, 248, 235);
-    doc.setDrawColor(196, 168, 130);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(margin, y, cw, 12, 2, 2, 'FD');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(180, 120, 60);
-    const cLines = doc.splitTextToSize('⚠  ' + r.caution, cw - 8);
-    doc.text(cLines, margin + 4, y + 7);
-    y += 15;
-  }
-
-  // ── 追蹤建議 ──
-  if (r.next_steps) {
-    sectionTitle('✦  後續追蹤建議');
-    bodyText(r.next_steps);
-    y += 3;
-  }
-
-  // ── FOOTER ──
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setDrawColor(...sage);
-    doc.setLineWidth(0.3);
-    doc.line(margin, 285, W - margin, 285);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(...textLight);
-    doc.text('本報告由專業芳療師依據客戶個人體質出具，僅供參考，不替代醫療建議。', margin, 290);
-    doc.text(`${i} / ${pageCount}`, W - margin, 290, { align: 'right' });
-  }
-
-  doc.save(`${d.name}_芳療配方報告_${today.replace(/\//g,'')}.pdf`);
   btn.innerHTML = '<span style="font-size:1rem">⬇</span> 下載 PDF';
   btn.disabled = false;
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }
 
 function renderFallback(d) {
