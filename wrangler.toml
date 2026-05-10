@@ -2,6 +2,7 @@ name = "aroma-therapist-api"
 main = "worker.js"
 compatibility_date = "2024-11-01"
 # account_id 由 GitHub Actions 環境變數 CLOUDFLARE_ACCOUNT_ID 帶入
+# deploy triggered: 2026-05-10T18:29:41Z
 
 # 環境變數在 Cloudflare Dashboard 設定，不寫在這裡（安全）
 # GEMINI_API_KEY = 你的 Gemini Key
