@@ -1059,34 +1059,45 @@ async function generateReport() {
 
   // Build prompt first
   const symptomList = symptoms.length ? symptoms.join('、') : '無特別症狀';
+  const symptomCount = symptoms.length || 1;
   const prompt = `你是一位擁有20年經驗的資深芳療師，精通中醫五行體質、西方芳療學與植物精油化學。請根據以下客戶完整資料，生成一份詳盡的個人化精油配方諮詢報告。
+
+【重要：以下資料已由系統確認，請直接使用，禁止自行重新推算或更改】
+五行：${element}（系統已依出生年天干計算確認）
+星座：${zodiac}座
+節氣：${solarTerm}
 
 【客戶資料】
 姓名：${name} | 出生：${year}年${month}月${day}日
-五行天干：${element} | 星座：${zodiac}座 | 節氣：${solarTerm}
-目的：${useCase} | 偏好香氣：${scentNames.join('、')||'未指定'} | 排斥：${dislike||'無'}
-症狀：${symptomList}
+五行：${element} | 星座：${zodiac}座 | 節氣：${solarTerm}
+調香目的：${useCase} | 偏好香氣：${scentNames.join('、')||'未指定'} | 排斥：${dislike||'無'}
+症狀（共${symptomCount}項）：${symptomList}
 睡眠：${sleep}/10 | 壓力：${stress}/10 | 能量：${energy}/10 | 情緒：${mood}/10
 補充：${extra||'無'}
 
-請只回傳JSON，不含任何markdown符號：
+【輸出規則】
+1. 只回傳純JSON，開頭必須是 { 結尾必須是 }，禁止任何markdown、說明文字
+2. symptom_analysis 每個症狀必須對應不同精油（禁止重複使用同一精油）
+3. 五行、星座、節氣欄位必須照上方確認值填寫，不可更改
+
+請輸出以下JSON：
 {
-  "constitution": "150字以上體質深度分析，融合五行${element}天干特質、${zodiac}座能量、${solarTerm}節氣影響，說明身心特質與容易失衡方向",
-  "symptom_analysis": [{"symptom":"症狀","oil":"對應精油","mechanism":"35字芳療機制說明"}],
+  "constitution": "150字以上體質深度分析，以五行${element}天干特質為核心，結合${zodiac}座能量與${solarTerm}節氣，說明此人身心特質與容易失衡的方向",
+  "symptom_analysis": [${symptoms.map(s=>`{"symptom":"${s}","oil":"針對此症狀最合適且與其他症狀不重複的精油（中英文）","mechanism":"此精油改善此症狀的35字芳療機制"}`).join(',')||'{"symptom":"體質調理","oil":"薰衣草 Lavender","mechanism":"平衡自律神經，促進身心放鬆與修復"}'}],
   "formula": [
-    {"layer":"前調","oil":"精油名","pct":25,"property":"主要功效成分","reason":"35字結合症狀與體質的選用理由"},
-    {"layer":"前調","oil":"精油名","pct":10,"property":"主要功效成分","reason":"35字選用理由"},
-    {"layer":"中調","oil":"精油名","pct":30,"property":"主要功效成分","reason":"35字選用理由"},
-    {"layer":"中調","oil":"精油名","pct":20,"property":"主要功效成分","reason":"35字選用理由"},
-    {"layer":"後調","oil":"精油名","pct":15,"property":"主要功效成分","reason":"35字選用理由"}
+    {"layer":"前調","oil":"精油名（中英文）","pct":25,"property":"主要功效成分","reason":"35字結合${element}體質與症狀的選用理由"},
+    {"layer":"前調","oil":"精油名（中英文）","pct":10,"property":"主要功效成分","reason":"35字選用理由"},
+    {"layer":"中調","oil":"精油名（中英文）","pct":30,"property":"主要功效成分","reason":"35字選用理由"},
+    {"layer":"中調","oil":"精油名（中英文）","pct":20,"property":"主要功效成分","reason":"35字選用理由"},
+    {"layer":"後調","oil":"精油名（中英文）","pct":15,"property":"主要功效成分","reason":"35字選用理由"}
   ],
   "blend_note": "80字配方協同說明",
   "lifestyle": "50字生活芳療建議與最佳使用時機",
   "diffuser": "具體擴香：水量+滴數+時長+時段",
   "roller": "滾珠：比例+基底油選擇理由+塗抹部位+手法+頻率",
   "massage": "按摩：濃度+基底油+重點部位+手法+頻率",
-  "bath": "精油浴建議（如適合此體質）",
-  "caution": "具體注意事項：光敏、禁忌族群、保存方式",
+  "bath": "精油浴建議（如適合此體質則填寫，否則填null）",
+  "caution": "具體注意事項：光敏性、禁忌族群、保存方式",
   "next_steps": "30天追蹤建議",
   "affirmation": "一句溫暖詩意的專屬肯定語"
 }`;
@@ -1236,6 +1247,16 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+function extractJson(raw) {
+  // 移除 markdown code block
+  let s = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // 找 JSON 物件的起始與結束
+  const start = s.indexOf('{');
+  const end = s.lastIndexOf('}');
+  if (start >= 0 && end > start) s = s.slice(start, end + 1);
+  return JSON.parse(s);
+}
+
 async function callGemini(prompt, clientData) {
   const { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote } = clientData;
   try {
@@ -1249,8 +1270,7 @@ async function callGemini(prompt, clientData) {
     if (data.error) throw new Error(data.error);
     const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!raw) throw new Error('Empty Gemini response');
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const result = JSON.parse(clean);
+    const result = extractJson(raw);
     incrementUsage();
     renderReport(result, { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood });
   } catch(e) {
@@ -1424,43 +1444,76 @@ function shareToLine() {
   const formulaText = r.formula?.map(f => `  ${f.layer} ${f.oil} ${f.pct}%`).join('\n') || '';
   const sympText = r.symptom_analysis?.map(s => `  • ${s.symptom} → ${s.oil}`).join('\n') || '';
 
-  const text = `🌿 ${d.name} 的專屬芳療配方報告
+  // 完整報告文字
+  const fullText = `🌿 ${d.name} 的專屬芳療配方報告
 📅 諮詢日期：${today}
 ━━━━━━━━━━━━━━
 ✦ 體質分析
 五行·${d.element}  ${d.zodiac}座  ${d.solarTerm}
 
-${r.constitution}
+${r.constitution || ''}
 
 ━━━━━━━━━━━━━━
-${sympText ? `✦ 症狀對應精油\n${sympText}\n\n━━━━━━━━━━━━━━\n` : ''}
-✦ 專屬精油配方
+${sympText ? `✦ 症狀對應精油\n${sympText}\n\n━━━━━━━━━━━━━━\n` : ''}✦ 專屬精油配方
 ${formulaText}
-
-${r.blend_note ? '✦ ' + r.blend_note : ''}
+${r.blend_note ? '\n✦ ' + r.blend_note : ''}
 
 ━━━━━━━━━━━━━━
 ✦ 使用建議
-💨 擴香：${r.diffuser||''}
-🧴 滾珠：${r.roller||''}
-🤲 按摩：${r.massage||''}
+💨 擴香：${r.diffuser || ''}
+🧴 滾珠：${r.roller || ''}
+🤲 按摩：${r.massage || ''}
 
-⚠ ${r.caution||'請依專業芳療師建議使用'}
+⚠ ${r.caution || '請依專業芳療師建議使用'}
 
 ━━━━━━━━━━━━━━
-"${r.affirmation||''}"
-
+"${r.affirmation || ''}"
 — 由專業芳療師出具`;
 
-  navigator.clipboard.writeText(text).then(() => {
+  // LINE URL 用較短摘要（URL有長度限制）
+  const shortText = `🌿 ${d.name} 芳療配方（${today}）\n五行·${d.element} ${d.zodiac}座\n\n${formulaText}\n\n"${r.affirmation || ''}"`;
+  const lineUrl = 'https://line.me/R/msg/text/?' + encodeURIComponent(shortText);
+
+  // 複製全文到剪貼板
+  const doCopy = (text) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    // fallback：用 textarea
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    return Promise.resolve();
+  };
+
+  doCopy(fullText).then(() => {
     const toast = document.getElementById('lineToast');
+    toast.textContent = '✓ 已複製完整報告，請開啟 LINE 貼上傳送';
     toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 3000);
-    // Open LINE on mobile
-    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
+    setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    // 嘗試開啟 LINE（行動裝置有效）
     window.open(lineUrl, '_blank');
   }).catch(() => {
-    alert('請手動複製以下內容：\n\n' + text);
+    // 複製失敗：顯示文字讓用戶手動複製
+    const ta = document.createElement('textarea');
+    ta.value = fullText;
+    ta.style.cssText = 'width:100%;height:200px;margin-top:12px;font-size:12px';
+    ta.readOnly = true;
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    box.innerHTML = '<div style="background:#fff;border-radius:12px;padding:20px;width:100%;max-width:500px"><p style="margin:0 0 8px;font-weight:600">請手動複製以下內容貼到 LINE：</p></div>';
+    box.firstChild.appendChild(ta);
+    const btn = document.createElement('button');
+    btn.textContent = '關閉';
+    btn.style.cssText = 'margin-top:10px;padding:8px 20px;border:1px solid #ccc;border-radius:6px;cursor:pointer;width:100%';
+    btn.onclick = () => document.body.removeChild(box);
+    box.firstChild.appendChild(btn);
+    document.body.appendChild(box);
+    ta.select();
   });
 }
 
