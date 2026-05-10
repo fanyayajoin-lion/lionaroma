@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>芳香體質診斷系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+TC:wght@300;400;500&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F7F3ED;
+    --warm-white: #FDFAF6;
+    --sage: #8A9E7F;
+    --sage-light: #B5C4AE;
+    --sage-dark: #5C7252;
+    --earth: #C4A882;
+    --earth-light: #DDD0BC;
+    --earth-dark: #8B7355;
+    --moss: #6B7F5E;
+    --text-dark: #2C2A25;
+    --text-mid: #5C5649;
+    --text-light: #9C9486;
+    --border: rgba(138,158,127,0.25);
+    --shadow: rgba(90,110,75,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    font-family: 'Noto Serif TC', serif;
+    color: var(--text-dark);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Organic background texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 20%, rgba(138,158,127,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 85% 75%, rgba(196,168,130,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(181,196,174,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Decorative leaf SVG background */
+  body::after {
+    content: '';
+    position: fixed; top: -10%; right: -5%; width: 45%; height: 55%;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Cpath d='M200 50 C280 80 350 160 320 250 C290 340 180 370 120 310 C60 250 80 130 200 50Z' fill='none' stroke='%238A9E7F' stroke-width='1' opacity='0.15'/%3E%3Cpath d='M200 50 C200 180 200 310 200 50' fill='none' stroke='%238A9E7F' stroke-width='0.8' opacity='0.12'/%3E%3Cpath d='M200 50 C150 100 120 180 150 250' fill='none' stroke='%238A9E7F' stroke-width='0.5' opacity='0.1'/%3E%3Cpath d='M200 50 C250 100 280 180 250 250' fill='none' stroke='%238A9E7F' stroke-width='0.5' opacity='0.1'/%3E%3Cpath d='M150 80 C100 120 350 280 150 80' fill='none' stroke='%238A9E7F' stroke-width='0.4' opacity='0.08'/%3E%3C/svg%3E") no-repeat center;
+    background-size: contain;
+    pointer-events: none; z-index: 0;
+    opacity: 0.6;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px;
+    position: relative; z-index: 1;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 56px;
+    position: relative;
+  }
+
+  .header-ornament {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-bottom: 20px;
+  }
+  .ornament-line {
+    width: 80px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--sage), transparent);
+  }
+  .ornament-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--sage); opacity: 0.6;
+  }
+
+  .header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.8rem; font-weight: 300; letter-spacing: 0.05em;
+    color: var(--text-dark); line-height: 1.2;
+  }
+  .header h1 span { color: var(--sage-dark); font-style: italic; }
+
+  .header-sub {
+    font-size: 0.82rem; letter-spacing: 0.25em; color: var(--text-light);
+    margin-top: 10px; font-weight: 300;
+    font-family: 'Lato', sans-serif;
+    text-transform: uppercase;
+  }
+
+  /* ── STEPS NAV ── */
+  .steps-nav {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; margin-bottom: 48px;
+  }
+  .step-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; cursor: pointer;
+  }
+  .step-circle {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1.5px solid var(--sage-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; color: var(--text-light);
+    background: var(--warm-white);
+    transition: all 0.3s;
+    font-family: 'Lato', sans-serif;
+  }
+  .step-item.active .step-circle {
+    background: var(--sage); border-color: var(--sage);
+    color: white; box-shadow: 0 0 0 4px rgba(138,158,127,0.15);
+  }
+  .step-item.done .step-circle {
+    background: var(--sage-light); border-color: var(--sage-light); color: white;
+  }
+  .step-label {
+    font-size: 0.7rem; color: var(--text-light); letter-spacing: 0.1em;
+    font-family: 'Lato', sans-serif; white-space: nowrap;
+  }
+  .step-item.active .step-label { color: var(--sage-dark); }
+  .step-connector {
+    width: 48px; height: 1px;
+    background: var(--earth-light); margin-bottom: 18px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 44px;
+    box-shadow: 0 4px 32px var(--shadow);
+    position: relative; overflow: hidden;
+    display: none;
+  }
+  .card.active { display: block; animation: fadeIn 0.4s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--sage-light), var(--earth-light), var(--sage-light));
+  }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-weight: 400;
+    color: var(--text-dark); margin-bottom: 6px;
+  }
+  .card-desc {
+    font-size: 0.82rem; color: var(--text-light); margin-bottom: 32px;
+    line-height: 1.7; font-family: 'Lato', sans-serif; font-weight: 300;
+  }
+
+  /* ── FORM ELEMENTS ── */
+  .form-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px; margin-bottom: 24px;
+  }
+  .form-row-2 { grid-template-columns: 1fr 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group label {
+    font-size: 0.78rem; letter-spacing: 0.15em; color: var(--text-mid);
+    font-family: 'Lato', sans-serif; font-weight: 400;
+    text-transform: uppercase;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 10px 14px;
+    border: 1px solid var(--earth-light);
+    border-radius: 8px;
+    background: var(--cream);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.88rem; color: var(--text-dark);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    appearance: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--sage);
+    box-shadow: 0 0 0 3px rgba(138,158,127,0.1);
+  }
+  .form-group textarea { min-height: 80px; resize: vertical; line-height: 1.7; }
+
+  /* ── SCENT PREFERENCE ── */
+  .scent-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-bottom: 24px;
+  }
+  .scent-card {
+    padding: 16px 12px;
+    border: 1.5px solid var(--earth-light);
+    border-radius: 12px; background: var(--cream);
+    text-align: center; cursor: pointer;
+    transition: all 0.25s;
+    position: relative; overflow: hidden;
+  }
+  .scent-card:hover {
+    border-color: var(--sage-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--shadow);
+  }
+  .scent-card.selected {
+    border-color: var(--sage);
+    background: rgba(138,158,127,0.08);
+    box-shadow: 0 0 0 1px var(--sage);
+  }
+  .scent-card.selected::after {
+    content: '✓';
+    position: absolute; top: 6px; right: 8px;
+    font-size: 0.7rem; color: var(--sage);
+    font-family: 'Lato', sans-serif;
+  }
+  .scent-icon { font-size: 1.8rem; margin-bottom: 6px; display: block; }
+  .scent-name {
+    font-size: 0.82rem; color: var(--text-dark);
+    font-weight: 500; margin-bottom: 2px;
+  }
+  .scent-desc { font-size: 0.72rem; color: var(--text-light); line-height: 1.4; }
+
+  /* ── SYMPTOM CHECK ── */
+  .symptom-section { margin-bottom: 28px; }
+  .symptom-title {
+    font-size: 0.78rem; letter-spacing: 0.15em; color: var(--text-mid);
+    text-transform: uppercase; margin-bottom: 12px;
+    font-family: 'Lato', sans-serif;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .symptom-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--earth-light);
+  }
+  .symptom-grid {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .symptom-tag {
+    padding: 7px 14px;
+    border: 1px solid var(--earth-light);
+    border-radius: 20px; background: var(--cream);
+    font-size: 0.8rem; color: var(--text-mid);
+    cursor: pointer; transition: all 0.2s;
+    font-family: 'Lato', sans-serif;
+  }
+  .symptom-tag:hover { border-color: var(--sage-light); color: var(--sage-dark); }
+  .symptom-tag.selected {
+    background: var(--sage); border-color: var(--sage);
+    color: white;
+  }
+
+  /* ── SLIDERS ── */
+  .slider-section { margin-bottom: 28px; }
+  .slider-item { margin-bottom: 20px; }
+  .slider-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .slider-label {
+    font-size: 0.82rem; color: var(--text-mid);
+    font-family: 'Lato', sans-serif;
+  }
+  .slider-value {
+    font-size: 0.78rem; color: var(--sage-dark);
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%; height: 4px;
+    background: linear-gradient(90deg, var(--sage) var(--val, 50%), var(--earth-light) var(--val, 50%));
+    border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--warm-white);
+    border: 2px solid var(--sage);
+    box-shadow: 0 1px 4px var(--shadow);
+    cursor: pointer; transition: transform 0.2s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  /* ── BUTTONS ── */
+  .btn-group {
+    display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px;
+  }
+  .btn {
+    padding: 12px 28px;
+    border-radius: 8px; border: none;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.85rem; letter-spacing: 0.1em;
+    cursor: pointer; transition: all 0.25s;
+  }
+  .btn-secondary {
+    background: transparent; color: var(--text-mid);
+    border: 1px solid var(--earth-light);
+  }
+  .btn-secondary:hover { border-color: var(--sage-light); color: var(--sage-dark); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--sage), var(--moss));
+    color: white;
+    box-shadow: 0 3px 12px rgba(107,127,94,0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 18px rgba(107,127,94,0.4);
+  }
+  .btn-generate {
+    background: linear-gradient(135deg, var(--earth), var(--earth-dark));
+    color: white; font-size: 0.88rem;
+    box-shadow: 0 3px 12px rgba(139,115,85,0.3);
+    padding: 14px 36px;
+  }
+  .btn-generate:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 18px rgba(139,115,85,0.4);
+  }
+
+  /* ── LOADING ── */
+  #loading {
+    display: none; text-align: center; padding: 60px 0;
+  }
+  .loading-leaves {
+    display: flex; justify-content: center; gap: 8px;
+    margin-bottom: 24px;
+  }
+  .loading-leaf {
+    font-size: 1.5rem;
+    animation: leafFloat 1.4s ease-in-out infinite;
+  }
+  .loading-leaf:nth-child(2) { animation-delay: 0.2s; }
+  .loading-leaf:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes leafFloat {
+    0%, 100% { transform: translateY(0) rotate(-5deg); opacity: 0.5; }
+    50% { transform: translateY(-10px) rotate(5deg); opacity: 1; }
+  }
+  .loading-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem; font-style: italic; color: var(--text-mid);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── REPORT ── */
+  #report { display: none; }
+
+  .report-header {
+    text-align: center; padding: 40px 44px 32px;
+    background: linear-gradient(160deg, rgba(138,158,127,0.08), rgba(196,168,130,0.06));
+    border-radius: 14px; margin-bottom: 28px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .report-header::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 60%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--sage), var(--earth), transparent);
+  }
+
+  .report-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem; font-weight: 300; letter-spacing: 0.08em;
+    color: var(--text-dark); margin-bottom: 4px;
+  }
+  .report-date-line {
+    font-size: 0.78rem; color: var(--text-light);
+    letter-spacing: 0.2em; font-family: 'Lato', sans-serif;
+  }
+
+  .element-badges {
+    display: flex; justify-content: center; gap: 10px; margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .badge {
+    padding: 5px 16px; border-radius: 20px;
+    font-size: 0.78rem; font-family: 'Lato', sans-serif;
+    letter-spacing: 0.1em;
+  }
+  .badge-wood { background: rgba(107,127,94,0.12); color: var(--moss); border: 1px solid rgba(107,127,94,0.25); }
+  .badge-fire { background: rgba(210,120,80,0.1); color: #b85a30; border: 1px solid rgba(210,120,80,0.25); }
+  .badge-earth { background: rgba(196,168,130,0.15); color: var(--earth-dark); border: 1px solid rgba(196,168,130,0.3); }
+  .badge-metal { background: rgba(180,180,170,0.15); color: #7a7a72; border: 1px solid rgba(180,180,170,0.3); }
+  .badge-water { background: rgba(100,140,160,0.1); color: #3a7090; border: 1px solid rgba(100,140,160,0.25); }
+
+  .report-section {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+  .report-section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem; color: var(--sage-dark);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .report-section-title::before {
+    content: ''; display: block; width: 20px; height: 1px;
+    background: var(--sage);
+  }
+
+  .report-text {
+    font-size: 0.88rem; color: var(--text-mid);
+    line-height: 1.9;
+  }
+
+  /* Formula display */
+  .formula-grid {
+    display: grid; gap: 12px;
+  }
+  .formula-item {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 18px;
+    background: var(--cream);
+    border-radius: 10px;
+    border-left: 3px solid var(--sage-light);
+  }
+  .formula-note { font-size: 0.8rem; }
+  .formula-label {
+    font-size: 0.7rem; color: var(--text-light);
+    font-family: 'Lato', sans-serif; letter-spacing: 0.15em;
+    text-transform: uppercase; min-width: 40px;
+  }
+  .formula-name {
+    font-size: 0.9rem; color: var(--text-dark); flex: 1;
+    font-family: 'Cormorant Garamond', serif; font-size: 1rem;
+  }
+  .formula-pct {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem; color: var(--sage-dark);
+    font-style: italic;
+  }
+  .formula-reason {
+    font-size: 0.78rem; color: var(--text-light);
+    line-height: 1.5; margin-top: 4px;
+    font-family: 'Lato', sans-serif; font-weight: 300;
+    flex-basis: 100%;
+  }
+
+  .formula-note-header {
+    font-size: 0.78rem; color: var(--text-light);
+    font-family: 'Lato', sans-serif; margin-top: 12px;
+    padding: 10px 14px; background: rgba(138,158,127,0.06);
+    border-radius: 8px; line-height: 1.7;
+  }
+
+  .usage-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+  }
+  .usage-item {
+    padding: 14px; text-align: center;
+    background: var(--cream); border-radius: 10px;
+    border: 1px solid var(--earth-light);
+  }
+  .usage-icon { font-size: 1.4rem; margin-bottom: 6px; display: block; }
+  .usage-name { font-size: 0.8rem; color: var(--text-mid); margin-bottom: 4px; }
+  .usage-detail { font-size: 0.72rem; color: var(--text-light); line-height: 1.5; }
+
+  .therapist-notes {
+    background: var(--cream);
+    border: 1px dashed var(--earth-light);
+    border-radius: 10px; padding: 18px 20px;
+    margin-top: 16px;
+  }
+  .therapist-notes textarea {
+    width: 100%; border: none; background: transparent;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.85rem; color: var(--text-mid);
+    line-height: 1.8; resize: none; min-height: 80px; outline: none;
+  }
+  .therapist-notes-label {
+    font-size: 0.72rem; color: var(--text-light);
+    letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Lato', sans-serif; margin-bottom: 8px;
+  }
+
+  .report-actions {
+    display: flex; justify-content: center; gap: 12px;
+    margin-top: 32px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .divider {
+    display: flex; align-items: center; gap: 16px;
+    margin: 24px 0;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--earth-light); }
+  .divider-text {
+    font-size: 0.72rem; color: var(--text-light);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    font-family: 'Lato', sans-serif;
+  }
+
+  /* ── CERT WALL ── */
+  .cert-wall {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 52px 40px;
+    text-align: center;
+    box-shadow: 0 4px 32px var(--shadow);
+    position: relative; overflow: hidden;
+  }
+  .cert-wall::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--sage-light), var(--earth-light), var(--sage-light));
+  }
+  .cert-icon { font-size: 3rem; margin-bottom: 16px; display: block; }
+  .cert-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.7rem; font-weight: 400;
+    color: var(--text-dark); margin-bottom: 12px;
+  }
+  .cert-desc {
+    font-size: 0.88rem; color: var(--text-mid);
+    line-height: 1.8; margin-bottom: 28px;
+    font-family: 'Lato', sans-serif; font-weight: 300;
+  }
+  .cert-desc strong { color: var(--sage-dark); font-weight: 600; }
+  .cert-input-wrap {
+    display: flex; gap: 10px; max-width: 420px;
+    margin: 0 auto 12px;
+  }
+  .cert-input-wrap input {
+    flex: 1; padding: 12px 16px;
+    border: 1.5px solid var(--earth-light);
+    border-radius: 8px; background: var(--cream);
+    font-family: 'Lato', sans-serif; font-size: 0.95rem;
+    letter-spacing: 0.15em; color: var(--text-dark);
+    outline: none; transition: border-color 0.2s;
+  }
+  .cert-input-wrap input:focus { border-color: var(--sage); }
+  .cert-error {
+    font-size: 0.8rem; color: #c0392b;
+    font-family: 'Lato', sans-serif; margin-bottom: 12px;
+  }
+  .cert-divider {
+    display: flex; align-items: center; gap: 16px;
+    max-width: 300px; margin: 20px auto;
+  }
+  .cert-divider::before, .cert-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--earth-light);
+  }
+  .cert-divider span {
+    font-size: 0.75rem; color: var(--text-light);
+    font-family: 'Lato', sans-serif; letter-spacing: 0.1em;
+  }
+  .cert-contact {
+    font-size: 0.83rem; color: var(--text-light);
+    line-height: 1.8; font-family: 'Lato', sans-serif;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .card { padding: 28px 20px; }
+    .form-row { grid-template-columns: 1fr; }
+    .scent-grid { grid-template-columns: repeat(2,1fr); }
+    .usage-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 2rem; }
+  }
+
+  /* ── SYMPTOM ANALYSIS ── */
+  .symptom-analysis-grid { display: flex; flex-direction: column; gap: 10px; }
+  .symptom-analysis-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 16px;
+    background: var(--cream); border-radius: 10px;
+    border-left: 3px solid var(--sage-light);
+  }
+  .sa-tag {
+    background: var(--sage-light); color: white;
+    padding: 3px 10px; border-radius: 12px;
+    font-size: 0.75rem; white-space: nowrap;
+    font-family: 'Lato', sans-serif;
+    flex-shrink: 0;
+  }
+  .sa-arrow { color: var(--earth); font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+  .sa-content { display: flex; flex-direction: column; gap: 3px; }
+  .sa-oil { font-family: 'Cormorant Garamond', serif; font-size: 1rem; color: var(--sage-dark); }
+  .sa-mech { font-size: 0.78rem; color: var(--text-light); line-height: 1.6; font-family: 'Lato', sans-serif; }
+
+  /* ── FORMULA V2 ── */
+  .formula-grid-v2 { display: flex; flex-direction: column; gap: 10px; }
+  .formula-item-v2 {
+    background: var(--cream); border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--earth-light);
+  }
+  .fi-layer {
+    display: inline-block; padding: 4px 12px;
+    font-size: 0.72rem; color: white;
+    font-family: 'Lato', sans-serif; letter-spacing: 0.1em;
+  }
+  .fi-main { padding: 8px 16px 10px; }
+  .fi-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+  .fi-name { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--text-dark); }
+  .fi-pct { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--sage-dark); font-style: italic; }
+  .fi-prop { font-size: 0.75rem; color: var(--earth-dark); margin-bottom: 4px; font-family: 'Lato', sans-serif; }
+  .fi-reason { font-size: 0.8rem; color: var(--text-mid); line-height: 1.6; font-family: 'Lato', sans-serif; }
+  .fi-bar-wrap { height: 3px; background: var(--earth-light); }
+  .fi-bar { height: 100%; background: linear-gradient(90deg, var(--sage), var(--earth)); transition: width 0.6s; }
+
+  /* ── USAGE V2 ── */
+  .usage-grid-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .usage-item-v2 {
+    padding: 16px; background: var(--cream);
+    border-radius: 10px; border: 1px solid var(--earth-light);
+  }
+  .uiv-icon { font-size: 1.4rem; margin-bottom: 6px; }
+  .uiv-title { font-size: 0.8rem; font-weight: 600; color: var(--sage-dark); margin-bottom: 6px; font-family: 'Lato', sans-serif; }
+  .uiv-detail { font-size: 0.78rem; color: var(--text-mid); line-height: 1.7; }
+  .caution-box {
+    margin-top: 14px; padding: 12px 16px;
+    background: rgba(196,168,130,0.1);
+    border: 1px solid var(--earth-light); border-radius: 8px;
+    font-size: 0.8rem; color: var(--earth-dark); line-height: 1.7;
+    font-family: 'Lato', sans-serif;
+  }
+
+  /* ── REPORT AFFIRMATION ── */
+  .report-affirmation {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; color: var(--text-mid);
+    font-size: 1rem; margin-top: 16px; letter-spacing: 0.05em;
+  }
+
+  /* ── ACTION BAR ── */
+  .action-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 32px; padding: 20px 24px;
+    background: var(--warm-white);
+    border: 1px solid var(--border); border-radius: 12px;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .action-right { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-line {
+    background: #06C755; color: white;
+    padding: 12px 24px; border-radius: 8px; border: none;
+    font-family: 'Lato', sans-serif; font-size: 0.85rem;
+    letter-spacing: 0.05em; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 3px 12px rgba(6,199,85,0.3);
+    transition: all 0.2s;
+  }
+  .btn-line:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(6,199,85,0.4); }
+  .btn-pdf {
+    background: linear-gradient(135deg, #5C7252, #3d5234);
+    color: white; padding: 12px 24px; border-radius: 8px; border: none;
+    font-family: 'Lato', sans-serif; font-size: 0.85rem;
+    letter-spacing: 0.05em; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 3px 12px rgba(60,80,42,0.3);
+    transition: all 0.2s;
+  }
+  .btn-pdf:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(60,80,42,0.4); }
+  .btn-pdf:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  @media (max-width: 600px) {
+    .usage-grid-v2 { grid-template-columns: 1fr; }
+    .action-bar { flex-direction: column; align-items: stretch; }
+    .action-right { flex-direction: column; }
+    .btn-line, .btn-pdf { justify-content: center; }
+  }
+
+  /* Print */
+  @media print {
+    body { background: white; }
+    body::before, body::after { display: none; }
+    .steps-nav, .no-print-hide { display: none !important; }
+    #step1, #step2, #step3, #loading { display: none !important; }
+    #report { display: block !important; }
+    .card { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-ornament">
+      <div class="ornament-line"></div>
+      <div class="ornament-dot"></div>
+      <div class="ornament-line"></div>
+    </div>
+    <h1>芳香體質 <span>診斷系統</span></h1>
+    <p class="header-sub">Aromatic Body Constitution · Personalized Blending</p>
+  </div>
+
+  <!-- Steps Nav -->
+  <div class="steps-nav">
+    <div class="step-item active" id="nav1">
+      <div class="step-circle">01</div>
+      <div class="step-label">基本資料</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="nav2">
+      <div class="step-circle">02</div>
+      <div class="step-label">香氣偏好</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="nav3">
+      <div class="step-circle">03</div>
+      <div class="step-label">身體狀態</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item" id="nav4">
+      <div class="step-circle">04</div>
+      <div class="step-label">專屬報告</div>
+    </div>
+  </div>
+
+  <!-- Step 1: Basic Info -->
+  <div class="card active" id="step1">
+    <div class="card-title">基本資料</div>
+    <p class="card-desc">填寫客戶基本資訊，系統將自動分析五行、星座與節氣體質。</p>
+
+    <div class="form-row form-row-2">
+      <div class="form-group">
+        <label>客戶姓名</label>
+        <input type="text" id="clientName" placeholder="例：陳小美">
+      </div>
+      <div class="form-group">
+        <label>性別</label>
+        <select id="clientGender">
+          <option value="">請選擇</option>
+          <option value="female">女性</option>
+          <option value="male">男性</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>出生年份</label>
+        <input type="number" id="birthYear" placeholder="例：1990" min="1930" max="2010">
+      </div>
+      <div class="form-group">
+        <label>出生月份</label>
+        <select id="birthMonth">
+          <option value="">月</option>
+          <option value="1">1月</option><option value="2">2月</option>
+          <option value="3">3月</option><option value="4">4月</option>
+          <option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option>
+          <option value="9">9月</option><option value="10">10月</option>
+          <option value="11">11月</option><option value="12">12月</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>出生日期</label>
+        <input type="number" id="birthDay" placeholder="日" min="1" max="31">
+      </div>
+    </div>
+
+    <div class="form-row form-row-2">
+      <div class="form-group">
+        <label>年齡</label>
+        <input type="number" id="clientAge" placeholder="例：34" min="1" max="100">
+      </div>
+      <div class="form-group">
+        <label>調香用途</label>
+        <select id="useCase">
+          <option value="">請選擇</option>
+          <option value="relax">放鬆舒壓</option>
+          <option value="sleep">助眠安神</option>
+          <option value="energy">提升能量</option>
+          <option value="focus">專注清晰</option>
+          <option value="emotion">情緒平衡</option>
+          <option value="body">身體調理</option>
+          <option value="romance">吸引力提升</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="goStep(2)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Scent Preference -->
+  <div class="card" id="step2">
+    <div class="card-title">香氣偏好</div>
+    <p class="card-desc">請客戶直覺選擇喜歡的香氣方向（可複選 1-3 種）</p>
+
+    <div class="scent-grid">
+      <div class="scent-card" onclick="toggleScent(this,'wood')">
+        <span class="scent-icon">🌿</span>
+        <div class="scent-name">木質 · 大地</div>
+        <div class="scent-desc">雪松、廣藿香、岩蘭草<br>穩定、接地、深沉</div>
+      </div>
+      <div class="scent-card" onclick="toggleScent(this,'floral')">
+        <span class="scent-icon">🌸</span>
+        <div class="scent-name">花香 · 柔美</div>
+        <div class="scent-desc">玫瑰、天竺葵、依蘭<br>浪漫、溫柔、滋養</div>
+      </div>
+      <div class="scent-card" onclick="toggleScent(this,'citrus')">
+        <span class="scent-icon">🍋</span>
+        <div class="scent-name">柑橘 · 清新</div>
+        <div class="scent-desc">佛手柑、甜橙、萊姆<br>明亮、活力、愉悅</div>
+      </div>
+      <div class="scent-card" onclick="toggleScent(this,'herb')">
+        <span class="scent-icon">🌱</span>
+        <div class="scent-name">草本 · 療癒</div>
+        <div class="scent-desc">薰衣草、迷迭香、羅勒<br>清涼、淨化、平衡</div>
+      </div>
+      <div class="scent-card" onclick="toggleScent(this,'oriental')">
+        <span class="scent-icon">🏺</span>
+        <div class="scent-name">東方 · 神秘</div>
+        <div class="scent-desc">乳香、沒藥、檀香<br>靈性、神聖、沉靜</div>
+      </div>
+      <div class="scent-card" onclick="toggleScent(this,'spice')">
+        <span class="scent-icon">🌶</span>
+        <div class="scent-name">辛香 · 溫暖</div>
+        <div class="scent-desc">黑胡椒、肉桂、薑<br>溫熱、活化、激勵</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>不喜歡的香氣或過敏（可填寫）</label>
+      <input type="text" id="dislikeScent" placeholder="例：不喜歡太濃的花香、對尤加利過敏">
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="goStep(1)">← 上一步</button>
+      <button class="btn btn-primary" onclick="goStep(3)">下一步 →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Body Condition -->
+  <div class="card" id="step3">
+    <div class="card-title">身體狀態評估</div>
+    <p class="card-desc">了解近期身心狀況，協助調配最適合的精油配方。</p>
+
+    <div class="symptom-section">
+      <div class="symptom-title">目前困擾症狀（可複選）</div>
+      <div class="symptom-grid">
+        <span class="symptom-tag" onclick="toggleTag(this)">失眠難入睡</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">多夢易醒</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">焦慮緊張</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">情緒低落</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">容易疲勞</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">注意力不集中</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">頭痛頭暈</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">肩頸僵硬</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">消化不良</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">月經不順</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">皮膚乾燥</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">免疫力下降</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">呼吸道敏感</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">手腳冰冷</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">水腫</span>
+        <span class="symptom-tag" onclick="toggleTag(this)">情緒起伏大</span>
+      </div>
+    </div>
+
+    <div class="slider-section">
+      <div class="symptom-title">各項狀態自評</div>
+
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-label">😴 睡眠品質</span>
+          <span class="slider-value" id="sleepVal">尚可</span>
+        </div>
+        <input type="range" id="sleepSlider" min="1" max="10" value="5" oninput="updateSlider(this,'sleepVal',sleepLabels)">
+      </div>
+
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-label">😤 壓力指數</span>
+          <span class="slider-value" id="stressVal">中等</span>
+        </div>
+        <input type="range" id="stressSlider" min="1" max="10" value="5" oninput="updateSlider(this,'stressVal',stressLabels)">
+      </div>
+
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-label">⚡ 整體能量</span>
+          <span class="slider-value" id="energyVal">普通</span>
+        </div>
+        <input type="range" id="energySlider" min="1" max="10" value="5" oninput="updateSlider(this,'energyVal',energyLabels)">
+      </div>
+
+      <div class="slider-item">
+        <div class="slider-header">
+          <span class="slider-label">💆 情緒穩定度</span>
+          <span class="slider-value" id="moodVal">還算穩定</span>
+        </div>
+        <input type="range" id="moodSlider" min="1" max="10" value="5" oninput="updateSlider(this,'moodVal',moodLabels)">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>補充說明（生活習慣、特殊需求、近期重大事件…）</label>
+      <textarea id="extraNotes" placeholder="例：最近換工作壓力很大，晚上常睡不著，白天容易發脾氣…"></textarea>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="goStep(2)">← 上一步</button>
+      <button class="btn btn-generate" onclick="generateReport()">✦ 生成專屬報告</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="loading-leaves">
+      <span class="loading-leaf">🌿</span>
+      <span class="loading-leaf">🌸</span>
+      <span class="loading-leaf">🌿</span>
+    </div>
+    <p class="loading-text">正在分析體質，調配專屬配方…</p>
+  </div>
+
+  <!-- Report -->
+  <div id="report"></div>
+</div>
+
+<script>
+// ── DATA ──
+const sleepLabels = ['極差','很差','差','偏差','尚可','尚可','良好','良好','很好','極佳'];
+const stressLabels = ['無壓力','極低','很低','偏低','中等','偏高','高','很高','極高','爆表'];
+const energyLabels = ['沒電','很低','偏低','略低','普通','還好','不錯','充沛','很充沛','滿滿能量'];
+const moodLabels = ['極不穩','很差','不穩','略波動','還算穩定','算穩定','穩定','很穩','非常穩','平和'];
+
+const scentMap = {
+  wood:     { name:'木質·大地', oils:['岩蘭草','雪松','廣藿香','檀香'] },
+  floral:   { name:'花香·柔美', oils:['天竺葵','玫瑰草','依蘭','橙花'] },
+  citrus:   { name:'柑橘·清新', oils:['佛手柑','甜橙','葡萄柚','萊姆'] },
+  herb:     { name:'草本·療癒', oils:['薰衣草','迷迭香','薄荷','快樂鼠尾草'] },
+  oriental: { name:'東方·神秘', oils:['乳香','沒藥','廣藿香','白松香'] },
+  spice:    { name:'辛香·溫暖', oils:['黑胡椒','薑','肉桂葉','丁香花苞'] },
+};
+
+// Five Elements
+// 天干：個位 4=甲 5=乙 6=丙 7=丁 8=戊 9=己 0=庚 1=辛 2=壬 3=癸
+function getFiveElement(year) {
+  const stemMap = {
+    4:'甲', 5:'乙', 6:'丙', 7:'丁', 8:'戊',
+    9:'己', 0:'庚', 1:'辛', 2:'壬', 3:'癸'
+  };
+  const elementMap = {
+    '甲':'木','乙':'木','丙':'火','丁':'火','戊':'土',
+    '己':'土','庚':'金','辛':'金','壬':'水','癸':'水'
+  };
+  const stem = stemMap[year % 10];
+  return elementMap[stem];
+}
+
+function getZodiacSign(month, day) {
+  const dates = [[1,20,'摩羯'],[2,19,'水瓶'],[3,20,'雙魚'],[4,20,'牡羊'],[5,21,'金牛'],[6,21,'雙子'],[7,23,'巨蟹'],[8,23,'獅子'],[9,23,'處女'],[10,23,'天秤'],[11,22,'天蠍'],[12,22,'射手'],[12,31,'摩羯']];
+  for (let [m,d,sign] of dates) {
+    if (month < m || (month === m && day <= d)) return sign;
+  }
+  return '摩羯';
+}
+
+function getSolarTerm(month, day) {
+  const terms = {
+    1:'小寒·大寒', 2:'立春·雨水', 3:'驚蟄·春分',
+    4:'清明·穀雨', 5:'立夏·小滿', 6:'芒種·夏至',
+    7:'小暑·大暑', 8:'立秋·處暑', 9:'白露·秋分',
+    10:'寒露·霜降', 11:'立冬·小雪', 12:'大雪·冬至'
+  };
+  return terms[month];
+}
+
+const elementScents = {
+  '木': { base:'岩蘭草、廣藿香', mid:'天竺葵、薰衣草', top:'佛手柑、葡萄柚', character:'木型體質偏向條達疏泄，香氣選擇以舒肝理氣為主，清新的柑橘調搭配草本能量，有助放鬆緊繃的神經系統。' },
+  '火': { base:'檀香、乳香', mid:'玫瑰草、天竺葵', top:'甜橙、萊姆', character:'火型體質能量旺盛，心火偏旺，選擇清涼降火的香氣，玫瑰草安撫心神，乳香引導能量向內沉澱。' },
+  '土': { base:'廣藿香、岩蘭草', mid:'薰衣草、快樂鼠尾草', top:'甜橙、葡萄柚', character:'土型體質消化系統敏感，容易思慮過多，選擇溫暖大地氣息搭配柑橘，能舒緩脾胃、安定心神。' },
+  '金': { base:'雪松、檀香', mid:'尤加利、茶樹', top:'薄荷、迷迭香', character:'金型體質肺氣敏感，清肺潤燥為主軸，木質調搭配清涼草本，有助呼吸道健康與心智清晰。' },
+  '水': { base:'乳香、廣藿香', mid:'薑、黑胡椒', top:'萊姆、薄荷', character:'水型體質腎氣需要滋養，選擇溫暖辛香搭配神聖的樹脂類，補腎納氣、增強內在意志力。' },
+};
+
+const zodiacBlend = {
+  '牡羊':'以黑胡椒與薑的辛香點火，增加行動力', '金牛':'以廣藿香穩定感官，喚醒大地連結',
+  '雙子':'以佛手柑提亮思路，迷迭香強化溝通', '巨蟹':'以依蘭安撫情緒，薰衣草給予母性滋養',
+  '獅子':'以乳香強化自信，甜橙散發陽光暖意', '處女':'以茶樹淨化細節，快樂鼠尾草放鬆過度思考',
+  '天秤':'以天竺葵平衡荷爾蒙，玫瑰草帶來和諧', '天蠍':'以沒藥深化轉化，廣藿香接地根本',
+  '射手':'以葡萄柚開展視野，雪松提供穩定基礎', '摩羯':'以岩蘭草強化目標，薑溫暖持久的意志',
+  '水瓶':'以薄荷激發創新，迷迭香連結未來視野', '雙魚':'以橙花喚醒靈性，薰衣草包覆夢境邊界',
+};
+
+// Slider labels
+function updateSlider(el, valId, labels) {
+  const v = parseInt(el.value);
+  document.getElementById(valId).textContent = labels[v-1];
+  const pct = ((v-1)/9*100).toFixed(0)+'%';
+  el.style.setProperty('--val', pct);
+}
+
+// Scent toggle
+let selectedScents = [];
+function toggleScent(el, key) {
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    selectedScents = selectedScents.filter(s => s !== key);
+  } else {
+    if (selectedScents.length >= 3) return;
+    el.classList.add('selected');
+    selectedScents.push(key);
+  }
+}
+
+// Tag toggle
+function toggleTag(el) {
+  el.classList.toggle('selected');
+}
+
+// Step navigation
+function goStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('step'+i).classList.remove('active');
+    document.getElementById('nav'+i).classList.remove('active','done');
+  });
+  document.getElementById('step'+n).classList.add('active');
+  document.getElementById('nav'+n).classList.add('active');
+  for(let i=1;i<n;i++) document.getElementById('nav'+i).classList.add('done');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// Gather symptoms
+function getSelectedSymptoms() {
+  return [...document.querySelectorAll('.symptom-tag.selected')].map(t => t.textContent);
+}
+
+// Generate Report
+async function generateReport() {
+  const name = document.getElementById('clientName').value || '匿名客戶';
+  const year = parseInt(document.getElementById('birthYear').value) || 1990;
+  const month = parseInt(document.getElementById('birthMonth').value) || 6;
+  const day = parseInt(document.getElementById('birthDay').value) || 15;
+  const gender = document.getElementById('clientGender').value;
+  const useCase = document.getElementById('useCase').value;
+  const dislike = document.getElementById('dislikeScent').value;
+  const extra = document.getElementById('extraNotes').value;
+  const symptoms = getSelectedSymptoms();
+  const sleep = document.getElementById('sleepSlider').value;
+  const stress = document.getElementById('stressSlider').value;
+  const energy = document.getElementById('energySlider').value;
+  const mood = document.getElementById('moodSlider').value;
+
+  const element = getFiveElement(year);
+  const zodiac = getZodiacSign(month, day);
+  const solarTerm = getSolarTerm(month, day);
+  const eData = elementScents[element];
+  const zodiacNote = zodiacBlend[zodiac] || '香氣選擇貼合當下季節能量';
+  const scentNames = selectedScents.map(k => scentMap[k]?.name).filter(Boolean);
+
+  // Build prompt first
+  const symptomList = symptoms.length ? symptoms.join('、') : '無特別症狀';
+  const prompt = `你是一位擁有20年經驗的資深芳療師，精通中醫五行體質、西方芳療學與植物精油化學。請根據以下客戶完整資料，生成一份詳盡的個人化精油配方諮詢報告。
+
+【客戶資料】
+姓名：${name} | 出生：${year}年${month}月${day}日
+五行天干：${element} | 星座：${zodiac}座 | 節氣：${solarTerm}
+目的：${useCase} | 偏好香氣：${scentNames.join('、')||'未指定'} | 排斥：${dislike||'無'}
+症狀：${symptomList}
+睡眠：${sleep}/10 | 壓力：${stress}/10 | 能量：${energy}/10 | 情緒：${mood}/10
+補充：${extra||'無'}
+
+請只回傳JSON，不含任何markdown符號：
+{
+  "constitution": "150字以上體質深度分析，融合五行${element}天干特質、${zodiac}座能量、${solarTerm}節氣影響，說明身心特質與容易失衡方向",
+  "symptom_analysis": [{"symptom":"症狀","oil":"對應精油","mechanism":"35字芳療機制說明"}],
+  "formula": [
+    {"layer":"前調","oil":"精油名","pct":25,"property":"主要功效成分","reason":"35字結合症狀與體質的選用理由"},
+    {"layer":"前調","oil":"精油名","pct":10,"property":"主要功效成分","reason":"35字選用理由"},
+    {"layer":"中調","oil":"精油名","pct":30,"property":"主要功效成分","reason":"35字選用理由"},
+    {"layer":"中調","oil":"精油名","pct":20,"property":"主要功效成分","reason":"35字選用理由"},
+    {"layer":"後調","oil":"精油名","pct":15,"property":"主要功效成分","reason":"35字選用理由"}
+  ],
+  "blend_note": "80字配方協同說明",
+  "lifestyle": "50字生活芳療建議與最佳使用時機",
+  "diffuser": "具體擴香：水量+滴數+時長+時段",
+  "roller": "滾珠：比例+基底油選擇理由+塗抹部位+手法+頻率",
+  "massage": "按摩：濃度+基底油+重點部位+手法+頻率",
+  "bath": "精油浴建議（如適合此體質）",
+  "caution": "具體注意事項：光敏、禁忌族群、保存方式",
+  "next_steps": "30天追蹤建議",
+  "affirmation": "一句溫暖詩意的專屬肯定語"
+}`;
+
+  // Show loading & run usage check
+  document.getElementById('step3').classList.remove('active');
+  document.getElementById('loading').style.display = 'block';
+
+  // ── 使用次數檢查 ──
+  const clientData = { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote };
+  if (!checkUsageLimit(clientData, prompt)) return;
+
+  await callGemini(prompt, clientData);
+}
+
+// ── 使用次數管理 ──
+const FREE_LIMIT = 2;
+const CERT_CODES = ['AROMA2025', 'THERAPIST88', 'FLORA2026']; // 可自訂多組認證碼
+
+function getUsageData() {
+  const today = new Date().toDateString();
+  const stored = localStorage.getItem('aromaUsage');
+  if (!stored) return { date: today, count: 0, certified: false };
+  const data = JSON.parse(stored);
+  if (data.date !== today) return { date: today, count: 0, certified: data.certified || false };
+  return data;
+}
+
+function saveUsageData(data) {
+  localStorage.setItem('aromaUsage', JSON.stringify(data));
+}
+
+function checkUsageLimit(clientData, prompt) {
+  const usage = getUsageData();
+  if (usage.certified) return true; // 認證過，無限使用
+
+  if (usage.count >= FREE_LIMIT) {
+    // 隱藏 loading，顯示認證牆
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('step3').classList.remove('active');
+    showCertWall(clientData, prompt);
+    return false;
+  }
+  return true;
+}
+
+function incrementUsage() {
+  const usage = getUsageData();
+  usage.count += 1;
+  saveUsageData(usage);
+}
+
+// ── 認證碼牆 ──
+function showCertWall(clientData, prompt) {
+  const report = document.getElementById('report');
+  report.style.display = 'block';
+  report.innerHTML = `
+    <div class="cert-wall">
+      <div class="cert-icon">🌿</div>
+      <h2 class="cert-title">今日免費體驗已用畢</h2>
+      <p class="cert-desc">
+        免費版每日提供 <strong>${FREE_LIMIT} 次</strong> 報告生成體驗。<br>
+        如您為認證芳療師，請輸入您的專屬認證碼以解鎖無限使用。
+      </p>
+      <div class="cert-input-wrap">
+        <input type="text" id="certInput" placeholder="請輸入芳療師認證碼" autocomplete="off"
+          style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+        <button class="btn btn-primary" onclick="verifyCert('${encodeURIComponent(JSON.stringify({name:clientData.name,year:clientData.year,month:clientData.month,day:clientData.day}))}', prompt_placeholder)">
+          解鎖使用
+        </button>
+      </div>
+      <div id="certError" class="cert-error" style="display:none">認證碼不正確，請確認後再試</div>
+      <div class="cert-divider">
+        <span>或</span>
+      </div>
+      <p class="cert-contact">
+        尚未取得認證碼？<br>
+        <a href="https://line.me/ti/p/~yourlinehere" target="_blank" style="color:var(--sage-dark)">聯絡芳療師取得認證資格 →</a>
+      </p>
+      <button class="btn btn-secondary" style="margin-top:16px" onclick="resetSystem()">← 返回首頁</button>
+    </div>
+  `;
+
+  // Store pending data for after cert
+  window._pendingClientData = clientData;
+  window._pendingPrompt = prompt;
+
+  // Fix button onclick after render
+  report.querySelector('.btn-primary').onclick = verifyCertAndGenerate;
+  document.getElementById('nav4').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function verifyCertAndGenerate() {
+  const input = document.getElementById('certInput')?.value?.trim().toUpperCase();
+  const errEl = document.getElementById('certError');
+  const btn = document.querySelector('.cert-wall .btn-primary');
+
+  if (!input) { errEl.style.display = 'block'; return; }
+
+  btn.textContent = '驗證中…';
+  btn.disabled = true;
+
+  try {
+    // 打後端驗證，認證碼不在前端
+    const res = await fetch(`${WORKER_URL}/api/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: input })
+    });
+    const { valid } = await res.json();
+
+    if (!valid) {
+      errEl.style.display = 'block';
+      document.getElementById('certInput').style.borderColor = '#c0392b';
+      btn.textContent = '解鎖使用';
+      btn.disabled = false;
+      return;
+    }
+
+    // 認證成功，永久儲存
+    const usage = getUsageData();
+    usage.certified = true;
+    saveUsageData(usage);
+
+    document.getElementById('report').innerHTML = '';
+    document.getElementById('report').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    await callGemini(window._pendingPrompt, window._pendingClientData);
+
+  } catch(e) {
+    errEl.textContent = '網路錯誤，請稍後再試';
+    errEl.style.display = 'block';
+    btn.textContent = '解鎖使用';
+    btn.disabled = false;
+  }
+}
+
+// ── Cloudflare Worker URL ──
+// 部署完成後，把下面這行換成你的 Worker 網址
+const WORKER_URL = 'YOUR_WORKER_URL';
+// 例如：const WORKER_URL = 'https://aroma-therapist-api.yourname.workers.dev';
+
+async function callGemini(prompt, clientData) {
+  const { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote } = clientData;
+  try {
+    // 打 Cloudflare Worker，不直接打 Gemini（API Key 安全）
+    const res = await fetch(`${WORKER_URL}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    incrementUsage();
+    renderReport(result, { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood });
+  } catch(e) {
+    console.error(e);
+    renderFallback({ name, year, month, day, element, zodiac, solarTerm, eData, zodiacNote, scentNames, symptoms });
+  }
+}
+
+// Store report data globally for PDF generation
+let currentReportData = null;
+let currentClientData = null;
+
+function renderReport(r, d) {
+  document.getElementById('loading').style.display = 'none';
+  currentReportData = r;
+  currentClientData = d;
+
+  const elementBadgeClass = { '木':'badge-wood','火':'badge-fire','土':'badge-earth','金':'badge-metal','水':'badge-water' };
+  const today = new Date().toLocaleDateString('zh-TW', {year:'numeric',month:'long',day:'numeric'});
+
+  // Symptom analysis section
+  const symptomHtml = (r.symptom_analysis && r.symptom_analysis.length)
+    ? r.symptom_analysis.map(s => `
+      <div class="symptom-analysis-item">
+        <div class="sa-tag">${s.symptom}</div>
+        <div class="sa-arrow">→</div>
+        <div class="sa-content">
+          <span class="sa-oil">🌿 ${s.oil}</span>
+          <span class="sa-mech">${s.mechanism}</span>
+        </div>
+      </div>`).join('')
+    : '<p class="report-text">無特別症狀，以體質調理為主。</p>';
+
+  // Formula
+  const layerColors = { '前調':'#A8C5A0', '中調':'#C4A882', '後調':'#8B9E95' };
+  const formulaHtml = r.formula?.map(f => `
+    <div class="formula-item-v2">
+      <div class="fi-layer" style="background:${layerColors[f.layer]||'#aaa'}">${f.layer}</div>
+      <div class="fi-main">
+        <div class="fi-top">
+          <span class="fi-name">${f.oil}</span>
+          <span class="fi-pct">${f.pct}%</span>
+        </div>
+        <div class="fi-prop">✦ ${f.property||''}</div>
+        <div class="fi-reason">${f.reason}</div>
+      </div>
+      <div class="fi-bar-wrap"><div class="fi-bar" style="width:${f.pct}%"></div></div>
+    </div>`).join('') || '';
+
+  const html = `
+    <!-- ══ REPORT PRINTABLE AREA ══ -->
+    <div id="printArea">
+
+    <div class="report-header">
+      <div class="report-name">${d.name} 的專屬香氛報告</div>
+      <div class="report-date-line">芳療諮詢日期 ${today} ｜ 專業調香師出具</div>
+      <div class="element-badges">
+        <span class="badge ${elementBadgeClass[d.element]||'badge-earth'}">五行 · ${d.element}</span>
+        <span class="badge badge-water">星座 · ${d.zodiac}座</span>
+        <span class="badge badge-wood">節氣 · ${d.solarTerm}</span>
+        ${d.scentNames.map(s=>`<span class="badge badge-earth">${s}</span>`).join('')}
+      </div>
+      ${r.affirmation?`<p class="report-affirmation">"${r.affirmation}"</p>`:''}
+    </div>
+
+    <!-- 體質分析 -->
+    <div class="report-section">
+      <div class="report-section-title">體質深度分析</div>
+      <p class="report-text">${r.constitution}</p>
+    </div>
+
+    <!-- 症狀對應 -->
+    ${(r.symptom_analysis && r.symptom_analysis.length) ? `
+    <div class="report-section">
+      <div class="report-section-title">症狀對應精油說明</div>
+      <div class="symptom-analysis-grid">${symptomHtml}</div>
+    </div>` : ''}
+
+    <!-- 配方 -->
+    <div class="report-section">
+      <div class="report-section-title">專屬精油配方</div>
+      <div class="formula-grid-v2">${formulaHtml}</div>
+      ${r.blend_note?`<div class="formula-note-header">✦ 配方協同說明｜${r.blend_note}</div>`:''}
+    </div>
+
+    <!-- 生活建議 -->
+    ${r.lifestyle?`
+    <div class="report-section">
+      <div class="report-section-title">生活芳療建議</div>
+      <p class="report-text">${r.lifestyle}</p>
+    </div>`:''}
+
+    <!-- 使用方式 -->
+    <div class="report-section">
+      <div class="report-section-title">建議使用方式</div>
+      <div class="usage-grid-v2">
+        <div class="usage-item-v2">
+          <div class="uiv-icon">💨</div>
+          <div class="uiv-title">擴香</div>
+          <div class="uiv-detail">${r.diffuser||'每次30-60分鐘，間隔休息'}</div>
+        </div>
+        <div class="usage-item-v2">
+          <div class="uiv-icon">🧴</div>
+          <div class="uiv-title">滾珠瓶</div>
+          <div class="uiv-detail">${r.roller||'2%稀釋，塗手腕、後頸'}</div>
+        </div>
+        <div class="usage-item-v2">
+          <div class="uiv-icon">🤲</div>
+          <div class="uiv-title">按摩</div>
+          <div class="uiv-detail">${r.massage||'2%稀釋後輕柔按摩'}</div>
+        </div>
+        ${r.bath?`<div class="usage-item-v2">
+          <div class="uiv-icon">🛁</div>
+          <div class="uiv-title">精油浴</div>
+          <div class="uiv-detail">${r.bath}</div>
+        </div>`:''}
+      </div>
+      ${r.caution?`<div class="caution-box">⚠ 注意事項｜${r.caution}</div>`:''}
+    </div>
+
+    <!-- 追蹤建議 -->
+    ${r.next_steps?`
+    <div class="report-section">
+      <div class="report-section-title">後續追蹤建議</div>
+      <p class="report-text">${r.next_steps}</p>
+    </div>`:''}
+
+    <!-- 調香師備注 -->
+    <div class="report-section no-print-hide">
+      <div class="report-section-title">調香師專業備注</div>
+      <div class="therapist-notes">
+        <div class="therapist-notes-label">備注欄（僅調香師可見，不列印給客戶）</div>
+        <textarea id="therapistNote" placeholder="記錄客製化調整方向、客戶反應、下次回診重點…"></textarea>
+      </div>
+    </div>
+
+    </div><!-- end printArea -->
+
+    <!-- ══ ACTION BAR ══ -->
+    <div class="action-bar no-print-hide">
+      <button class="btn btn-secondary" onclick="resetSystem()">← 新客戶診斷</button>
+      <div class="action-right">
+        <button class="btn btn-line" onclick="shareToLine()">
+          <span style="font-size:1.1rem">💬</span> LINE 傳給客戶
+        </button>
+        <button class="btn btn-pdf" onclick="downloadPDF()">
+          <span style="font-size:1rem">⬇</span> 下載 PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- LINE share toast -->
+    <div id="lineToast" style="display:none;position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#06C755;color:white;padding:12px 28px;border-radius:24px;font-size:0.88rem;font-family:'Lato',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:999">
+      ✓ 已複製報告內容，請貼到 LINE 傳送
+    </div>
+  `;
+
+  const reportEl = document.getElementById('report');
+  reportEl.innerHTML = html;
+  reportEl.style.display = 'block';
+  document.getElementById('nav4').classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── LINE SHARE ──
+function shareToLine() {
+  const r = currentReportData;
+  const d = currentClientData;
+  if (!r || !d) return;
+  const today = new Date().toLocaleDateString('zh-TW');
+  const formulaText = r.formula?.map(f => `  ${f.layer} ${f.oil} ${f.pct}%`).join('\n') || '';
+  const sympText = r.symptom_analysis?.map(s => `  • ${s.symptom} → ${s.oil}`).join('\n') || '';
+
+  const text = `🌿 ${d.name} 的專屬芳療配方報告
+📅 諮詢日期：${today}
+━━━━━━━━━━━━━━
+✦ 體質分析
+五行·${d.element}  ${d.zodiac}座  ${d.solarTerm}
+
+${r.constitution}
+
+━━━━━━━━━━━━━━
+${sympText ? `✦ 症狀對應精油\n${sympText}\n\n━━━━━━━━━━━━━━\n` : ''}
+✦ 專屬精油配方
+${formulaText}
+
+${r.blend_note ? '✦ ' + r.blend_note : ''}
+
+━━━━━━━━━━━━━━
+✦ 使用建議
+💨 擴香：${r.diffuser||''}
+🧴 滾珠：${r.roller||''}
+🤲 按摩：${r.massage||''}
+
+⚠ ${r.caution||'請依專業芳療師建議使用'}
+
+━━━━━━━━━━━━━━
+"${r.affirmation||''}"
+
+— 由專業芳療師出具`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('lineToast');
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    // Open LINE on mobile
+    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
+    window.open(lineUrl, '_blank');
+  }).catch(() => {
+    alert('請手動複製以下內容：\n\n' + text);
+  });
+}
+
+// ── PDF DOWNLOAD ──
+async function downloadPDF() {
+  const btn = document.querySelector('.btn-pdf');
+  btn.textContent = '⏳ 產生中…';
+  btn.disabled = true;
+
+  // Load jsPDF
+  if (!window.jspdf) {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  const { jsPDF } = window.jspdf;
+  const r = currentReportData;
+  const d = currentClientData;
+  const today = new Date().toLocaleDateString('zh-TW');
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, margin = 18, cw = W - margin * 2;
+  let y = 0;
+
+  // Color palette
+  const sage = [138, 158, 127];
+  const earth = [196, 168, 130];
+  const cream = [247, 243, 237];
+  const textDark = [44, 42, 37];
+  const textMid = [92, 86, 73];
+  const textLight = [156, 148, 134];
+
+  function newPage() {
+    doc.addPage();
+    y = 20;
+    // Subtle header line on new pages
+    doc.setDrawColor(...sage);
+    doc.setLineWidth(0.3);
+    doc.line(margin, 8, W - margin, 8);
+  }
+
+  function checkY(needed) {
+    if (y + needed > 272) newPage();
+  }
+
+  function sectionTitle(title) {
+    checkY(16);
+    doc.setFillColor(...sage);
+    doc.roundedRect(margin, y, cw, 8, 1.5, 1.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.text(title, margin + 6, y + 5.5);
+    y += 12;
+  }
+
+  function bodyText(text, indent = 0) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...textMid);
+    const lines = doc.splitTextToSize(text, cw - indent);
+    checkY(lines.length * 5 + 4);
+    doc.text(lines, margin + indent, y);
+    y += lines.length * 5 + 3;
+  }
+
+  function smallText(text, color = textLight) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(text, cw);
+    doc.text(lines, margin, y);
+    y += lines.length * 4.5 + 2;
+  }
+
+  // ── COVER HEADER ──
+  // Top gradient bar
+  doc.setFillColor(...sage);
+  doc.rect(0, 0, W, 38, 'F');
+  doc.setFillColor(...earth);
+  doc.rect(0, 36, W, 2, 'F');
+
+  // Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(255, 255, 255);
+  doc.text(`${d.name}`, margin, 16);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text('的專屬天然精油芳療配方報告', margin, 24);
+  doc.setFontSize(8);
+  doc.setTextColor(220, 235, 215);
+  doc.text(`諮詢日期 ${today}  ｜  五行·${d.element}  ｜  ${d.zodiac}座  ｜  ${d.solarTerm}`, margin, 32);
+
+  y = 46;
+
+  // Affirmation box
+  if (r.affirmation) {
+    doc.setFillColor(...cream);
+    doc.setDrawColor(...earth);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, cw, 12, 2, 2, 'FD');
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9);
+    doc.setTextColor(...textMid);
+    const aff = doc.splitTextToSize(`"${r.affirmation}"`, cw - 8);
+    doc.text(aff, margin + 4, y + 7);
+    y += 17;
+  }
+
+  // ── 體質分析 ──
+  sectionTitle('✦  體質深度分析');
+  bodyText(r.constitution || '');
+  y += 3;
+
+  // ── 症狀對應 ──
+  if (r.symptom_analysis && r.symptom_analysis.length) {
+    sectionTitle('✦  症狀對應精油說明');
+    r.symptom_analysis.forEach(s => {
+      checkY(14);
+      doc.setFillColor(245, 240, 232);
+      doc.roundedRect(margin, y, cw, 11, 1.5, 1.5, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...sage);
+      doc.text(s.symptom, margin + 4, y + 4.5);
+      doc.setTextColor(...earth);
+      doc.text(`→  ${s.oil}`, margin + 40, y + 4.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...textMid);
+      const mLines = doc.splitTextToSize(s.mechanism || '', cw - 8);
+      doc.text(mLines, margin + 4, y + 9);
+      y += 14;
+    });
+    y += 3;
+  }
+
+  // ── 配方 ──
+  sectionTitle('✦  專屬精油配方');
+  const layerColor = { '前調': sage, '中調': earth, '後調': [139, 158, 149] };
+  r.formula?.forEach(f => {
+    checkY(20);
+    const lc = layerColor[f.layer] || textMid;
+    doc.setFillColor(247, 243, 237);
+    doc.roundedRect(margin, y, cw, 18, 2, 2, 'F');
+    doc.setFillColor(...lc);
+    doc.roundedRect(margin, y, 14, 18, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(255, 255, 255);
+    doc.text(f.layer, margin + 2, y + 10.5, { maxWidth: 10, align: 'center' });
+
+    // Oil name + pct
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...textDark);
+    doc.text(f.oil, margin + 18, y + 6);
+    doc.setFontSize(10);
+    doc.setTextColor(...sage);
+    doc.text(`${f.pct}%`, W - margin - 2, y + 6, { align: 'right' });
+
+    // Property
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...textLight);
+    doc.text(f.property || '', margin + 18, y + 11);
+
+    // Reason
+    doc.setFontSize(7.5);
+    doc.setTextColor(...textMid);
+    const rLines = doc.splitTextToSize(f.reason || '', cw - 24);
+    doc.text(rLines[0] || '', margin + 18, y + 15.5);
+    y += 21;
+  });
+
+  if (r.blend_note) {
+    checkY(14);
+    doc.setFillColor(235, 242, 232);
+    doc.roundedRect(margin, y, cw, 10, 2, 2, 'F');
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(...textMid);
+    const bnLines = doc.splitTextToSize('✦ ' + r.blend_note, cw - 8);
+    doc.text(bnLines[0], margin + 4, y + 6.5);
+    y += 14;
+  }
+
+  // ── 生活建議 ──
+  if (r.lifestyle) {
+    sectionTitle('✦  生活芳療建議');
+    bodyText(r.lifestyle);
+    y += 3;
+  }
+
+  // ── 使用方式 ──
+  sectionTitle('✦  建議使用方式');
+  const usages = [
+    { icon: '💨', title: '擴  香', text: r.diffuser },
+    { icon: '🧴', title: '滾珠瓶', text: r.roller },
+    { icon: '🤲', title: '按  摩', text: r.massage },
+    r.bath ? { icon: '🛁', title: '精油浴', text: r.bath } : null,
+  ].filter(Boolean);
+
+  usages.forEach(u => {
+    checkY(22);
+    doc.setFillColor(247, 243, 237);
+    doc.roundedRect(margin, y, cw, 20, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...sage);
+    doc.text(u.title, margin + 4, y + 7);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...textMid);
+    const uLines = doc.splitTextToSize(u.text || '', cw - 28);
+    doc.text(uLines, margin + 28, y + 7);
+    y += 23;
+  });
+
+  // Caution
+  if (r.caution) {
+    checkY(14);
+    doc.setFillColor(255, 248, 235);
+    doc.setDrawColor(196, 168, 130);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, cw, 12, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(180, 120, 60);
+    const cLines = doc.splitTextToSize('⚠  ' + r.caution, cw - 8);
+    doc.text(cLines, margin + 4, y + 7);
+    y += 15;
+  }
+
+  // ── 追蹤建議 ──
+  if (r.next_steps) {
+    sectionTitle('✦  後續追蹤建議');
+    bodyText(r.next_steps);
+    y += 3;
+  }
+
+  // ── FOOTER ──
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(...sage);
+    doc.setLineWidth(0.3);
+    doc.line(margin, 285, W - margin, 285);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...textLight);
+    doc.text('本報告由專業芳療師依據客戶個人體質出具，僅供參考，不替代醫療建議。', margin, 290);
+    doc.text(`${i} / ${pageCount}`, W - margin, 290, { align: 'right' });
+  }
+
+  doc.save(`${d.name}_芳療配方報告_${today.replace(/\//g,'')}.pdf`);
+  btn.innerHTML = '<span style="font-size:1rem">⬇</span> 下載 PDF';
+  btn.disabled = false;
+}
+
+function renderFallback(d) {
+  document.getElementById('loading').style.display = 'none';
+  const fallback = {
+    constitution: `${d.name}出生於${d.year}年，五行天干屬${d.element}，${d.zodiac}座，誕生於${d.solarTerm}時節。${d.eData.character}此體質在季節交替時特別容易感到疲憊，建議透過芳療建立穩定的身心儀式。`,
+    symptom_analysis: d.symptoms.slice(0,4).map(s => ({
+      symptom: s,
+      oil: d.eData.mid.split('、')[0],
+      mechanism: '針對此症狀選用的精油具有平衡神經系統、舒緩緊張的天然成分'
+    })),
+    formula: [
+      {layer:'前調', oil: d.eData.top.split('、')[0], pct:25, property:'單帖烯類·提振活化', reason:'帶來清新明亮的開場，迅速提振感官，呼應柑橘偏好'},
+      {layer:'前調', oil: d.eData.top.split('、')[1]||'佛手柑', pct:10, property:'酯類·抗焦慮', reason:'舒緩緊張情緒，協助前調香氣自然融合'},
+      {layer:'中調', oil: d.eData.mid.split('、')[0], pct:30, property:'醇類·平衡荷爾蒙', reason:`${d.zodiacNote}，平衡心身核心能量`},
+      {layer:'中調', oil: d.eData.mid.split('、')[1]||'天竺葵', pct:20, property:'酯類·安撫神經', reason:'強化中調深度，對應五行'+d.element+'的調理需求'},
+      {layer:'後調', oil: d.eData.base.split('、')[0], pct:15, property:'倍半帖烯·接地穩定', reason:'提供溫暖持久的基底，增強整體配方的留香度'},
+    ],
+    blend_note: `依據五行${d.element}天干特質與${d.zodiac}座能量調配，搭配當季${d.solarTerm}節氣，前中後調協同作用，由清新到深沉，層次豐富。`,
+    lifestyle: '建議每日早晨使用擴香建立清醒儀式，睡前使用滾珠瓶進行呼吸冥想，讓香氣成為身心轉換的信號。',
+    diffuser:'200ml水加4-5滴，每次擴香30-45分鐘，早起或睡前各一次最佳。',
+    roller:'荷荷芭油10ml加2-3滴精油（約2%），塗抹手腕內側、太陽穴、後頸髮際，配合深呼吸3次。',
+    massage:'甜杏仁油30ml加6-8滴（約2%），重點按摩肩頸、後背上段，緩慢畫圓30秒後再推拿。',
+    caution:'懷孕初期、嬰幼兒、癲癇患者請先諮詢。柑橘類精油具光敏性，使用後4小時避免日曬。',
+    next_steps: '建議使用2-3週後回診，告知身體反應與喜好變化，依據季節轉換適度調整配方比例。',
+    affirmation:'每一次深呼吸，都是你給自己最溫柔的禮物。',
+  };
+  renderReport(fallback, d);
+}
+
+function resetSystem() {
+  document.getElementById('report').style.display = 'none';
+  document.getElementById('report').innerHTML = '';
+  selectedScents = [];
+  document.querySelectorAll('.scent-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.symptom-tag').forEach(t => t.classList.remove('selected'));
+  ['clientName','clientAge','birthYear','birthDay','dislikeScent','extraNotes'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  goStep(1);
+  [1,2,3,4].forEach(i => {
+    const n = document.getElementById('nav'+i);
+    n.classList.remove('active','done');
+  });
+  document.getElementById('nav1').classList.add('active');
+}
+
+// Init sliders
+document.querySelectorAll('input[type="range"]').forEach(r => {
+  r.style.setProperty('--val', '50%');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+name = "aroma-therapist-api"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# 環境變數在 Cloudflare Dashboard 設定，不寫在這裡（安全）
+# GEMINI_API_KEY = 你的 Gemini Key
+# CERT_CODES = AROMA2025,THERAPIST88,FLORA2026
