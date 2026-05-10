@@ -29,15 +29,31 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: 90ce49be451730c9295f750377adfb3e
         run: |
-          OUTPUT=$(wrangler deploy 2>&1)
-          echo "$OUTPUT"
-          WORKER_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev' | head -1)
-          if [ -z "$WORKER_URL" ]; then
-            echo "❌ 無法取得 Worker URL，請檢查部署輸出"
+          # tee 讓輸出同時顯示在 log 並存檔
+          wrangler deploy 2>&1 | tee /tmp/deploy_out.txt
+          DEPLOY_EXIT=${PIPESTATUS[0]}
+
+          if [ $DEPLOY_EXIT -ne 0 ]; then
+            echo "❌ wrangler deploy 失敗（exit $DEPLOY_EXIT）"
             exit 1
           fi
+
+          # 嘗試多種 URL 格式
+          WORKER_URL=$(grep -oE 'https://[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.workers\.dev' /tmp/deploy_out.txt | head -1)
+
+          # 若仍抓不到，直接用 wrangler 回報的網址行
+          if [ -z "$WORKER_URL" ]; then
+            WORKER_URL=$(grep 'workers.dev' /tmp/deploy_out.txt | grep -oE 'https://\S+' | head -1)
+          fi
+
+          if [ -z "$WORKER_URL" ]; then
+            echo "⚠️  Worker 已部署，但無法自動取得 URL。deploy 輸出如上，請手動確認。"
+            # 用預測 URL 繼續（帳號 subdomain 可能需調整）
+            WORKER_URL="https://aroma-therapist-api.${CLOUDFLARE_ACCOUNT_ID}.workers.dev"
+          fi
+
           echo "url=$WORKER_URL" >> $GITHUB_OUTPUT
-          echo "✅ Worker 部署成功：$WORKER_URL"
+          echo "✅ Worker URL：$WORKER_URL"
 
       - name: Set GEMINI_API_KEY secret
         env:
