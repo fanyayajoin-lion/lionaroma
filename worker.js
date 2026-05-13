@@ -1,13 +1,28 @@
+const ALLOWED_ORIGINS = [
+  'https://fanyayajoin-lion.github.io',
+  'http://localhost',
+  'http://127.0.0.1',
+];
+
+function getAllowedOrigin(request) {
+  const origin = request.headers.get('Origin') || '';
+  return ALLOWED_ORIGINS.some(o => origin === o || origin.startsWith(o + ':'))
+    ? origin
+    : ALLOWED_ORIGINS[0];
+}
+
 export default {
   async fetch(request, env, ctx) {
+    const allowedOrigin = getAllowedOrigin(request);
 
     // CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': allowedOrigin,
           'Access-Control-Allow-Methods': 'POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type',
+          'Vary': 'Origin',
         }
       });
     }
@@ -41,13 +56,13 @@ export default {
 
         const data = await res.json();
         return new Response(JSON.stringify(data), {
-          headers: corsHeaders()
+          headers: corsHeaders(allowedOrigin)
         });
 
       } catch (e) {
         return new Response(JSON.stringify({ error: 'Server error' }), {
           status: 500,
-          headers: corsHeaders()
+          headers: corsHeaders(allowedOrigin)
         });
       }
     }
@@ -59,7 +74,7 @@ export default {
 
         if (!code || typeof code !== 'string') {
           return new Response(JSON.stringify({ valid: false }), {
-            headers: corsHeaders()
+            headers: corsHeaders(allowedOrigin)
           });
         }
 
@@ -72,13 +87,13 @@ export default {
         const isValid = validCodes.includes(code.trim().toUpperCase());
 
         return new Response(JSON.stringify({ valid: isValid }), {
-          headers: corsHeaders()
+          headers: corsHeaders(allowedOrigin)
         });
 
       } catch (e) {
         return new Response(JSON.stringify({ valid: false }), {
           status: 400,
-          headers: corsHeaders()
+          headers: corsHeaders(allowedOrigin)
         });
       }
     }
@@ -86,7 +101,7 @@ export default {
     // Health check
     if (url.pathname === '/') {
       return new Response(JSON.stringify({ status: 'ok', service: 'Aroma Therapist API 🌿' }), {
-        headers: corsHeaders()
+        headers: corsHeaders(allowedOrigin)
       });
     }
 
@@ -94,11 +109,12 @@ export default {
   }
 };
 
-function corsHeaders() {
+function corsHeaders(origin) {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
   };
 }
