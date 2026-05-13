@@ -898,15 +898,7 @@
       </div>
       <div class="form-group">
         <label>出生月份</label>
-        <select id="birthMonth">
-          <option value="">月</option>
-          <option value="1">1月</option><option value="2">2月</option>
-          <option value="3">3月</option><option value="4">4月</option>
-          <option value="5">5月</option><option value="6">6月</option>
-          <option value="7">7月</option><option value="8">8月</option>
-          <option value="9">9月</option><option value="10">10月</option>
-          <option value="11">11月</option><option value="12">12月</option>
-        </select>
+        <input type="number" id="birthMonth" placeholder="月 (1-12)" min="1" max="12" oninput="autoFillAge()">
       </div>
       <div class="form-group">
         <label>出生日期</label>
@@ -1078,6 +1070,21 @@
   <div id="report"></div>
 </div>
 
+<!-- Footer -->
+<footer style="
+  text-align:center;
+  padding:28px 24px;
+  margin-top:48px;
+  border-top:1px solid rgba(138,158,127,0.2);
+  font-family:'Lato',sans-serif;
+  font-size:0.78rem;
+  color:var(--text-light);
+  letter-spacing:0.12em;
+  background:transparent;
+">
+  Copyright &copy; 2025 群獅整合行銷 All Rights Reserved.
+</footer>
+
 <script>
 // ── DATA ──
 const sleepLabels = ['極差','很差','差','偏差','尚可','尚可','良好','良好','很好','極佳'];
@@ -1235,10 +1242,6 @@ function autoFillAge() {
   if (age > 0 && age < 120) document.getElementById('clientAge').value = age;
 }
 
-// Month select change also triggers age calc
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('birthMonth').addEventListener('change', autoFillAge);
-});
 
 // Step 1 validation
 function validateStep1() {
@@ -1841,11 +1844,41 @@ function renderFallback(d) {
   if (genBtn) { genBtn.disabled = false; genBtn.textContent = '✦ 生成專屬報告'; }
   const fallback = {
     constitution: `${d.name}出生於${d.year}年，五行天干屬${d.element}，${d.zodiac}座，誕生於${d.solarTerm}時節。${d.eData.character}此體質在季節交替時特別容易感到疲憊，建議透過芳療建立穩定的身心儀式。`,
-    symptom_analysis: d.symptoms.slice(0,4).map(s => ({
-      symptom: s,
-      oil: d.eData.mid.split('、')[0],
-      mechanism: '針對此症狀選用的精油具有平衡神經系統、舒緩緊張的天然成分'
-    })),
+    symptom_analysis: d.symptoms.slice(0, 6).map((s, i) => {
+      const oilPool = [
+        ...d.eData.top.split('、'),
+        ...d.eData.mid.split('、'),
+        ...d.eData.base.split('、'),
+        '真正薰衣草', '佛手柑', '乳香', '岩蘭草', '薄荷', '黑胡椒',
+      ];
+      const used = [];
+      const pick = (idx) => {
+        for (let j = idx; j < oilPool.length; j++) {
+          if (!used.includes(oilPool[j])) { used.push(oilPool[j]); return oilPool[j]; }
+        }
+        return oilPool[idx % oilPool.length];
+      };
+      const symptomOilMap = {
+        '失眠難入睡': { oil: '真正薰衣草', mech: '富含乙酸沉香酯，調節 GABA 受體，降低皮質醇，縮短入睡時間' },
+        '多夢易醒': { oil: '羅馬洋甘菊', mech: '天藍烴成分安撫神經過度活躍，穩定深層睡眠週期' },
+        '焦慮緊張': { oil: '佛手柑', mech: '佛手柑烯平衡自律神經，降低腎上腺素分泌，緩解焦慮感' },
+        '情緒低落': { oil: '甜橙', mech: '柑橘烯刺激多巴胺分泌，溫暖振奮情緒，帶來正向能量' },
+        '容易疲勞': { oil: '桉油醇迷迭香', mech: '1,8-桉葉素促進大腦血氧循環，消除疲勞感，提升體力' },
+        '注意力不集中': { oil: '薄荷', mech: '薄荷醇刺激大腦清醒系統，提升專注力與認知靈敏度' },
+        '頭痛頭暈': { oil: '薄荷', mech: '薄荷醇局部塗抹太陽穴，舒張血管、降低頭部緊張壓力' },
+        '肩頸僵硬': { oil: '黑胡椒', mech: '胡椒鹼促進局部血液循環，溫熱放鬆深層肌筋膜緊繃' },
+        '消化不良': { oil: '甜茴香', mech: '反式洋茴香腦舒緩腸道痙攣，促進消化酵素分泌' },
+        '月經不順': { oil: '快樂鼠尾草', mech: '含植物雌激素類成分，平衡荷爾蒙，調理月經週期' },
+        '皮膚乾燥': { oil: '天竺葵', mech: '香茅醇調節皮脂分泌，促進細胞再生，改善皮膚屏障功能' },
+        '免疫力下降': { oil: '茶樹', mech: '萜品烯-4-醇激活免疫細胞，提升自然殺手細胞活性' },
+        '呼吸道敏感': { oil: '尤加利', mech: '1,8-桉葉素抗菌消炎、舒張支氣管，暢通呼吸道' },
+        '手腳冰冷': { oil: '薑', mech: '薑辣素促進末梢血液循環，溫暖四肢、改善陽虛體質' },
+        '水腫': { oil: '杜松漿果', mech: '萜品醇利尿排毒，促進淋巴循環，消除下肢水腫' },
+        '情緒起伏大': { oil: '岩蘭草', mech: '倍半萜烯接地安神，穩定過度活躍的情緒中樞' },
+      };
+      if (symptomOilMap[s]) return { symptom: s, oil: symptomOilMap[s].oil, mechanism: symptomOilMap[s].mech };
+      return { symptom: s, oil: pick(i), mechanism: '針對此症狀，選用具有平衡植物化學成分的精油，協助身心恢復平衡' };
+    }),
     formula: [
       {layer:'前調', oil: d.eData.top.split('、')[0], pct:25, property:'單帖烯類·提振活化', reason:'帶來清新明亮的開場，迅速提振感官，呼應柑橘偏好'},
       {layer:'前調', oil: d.eData.top.split('、')[1]||'佛手柑', pct:10, property:'酯類·抗焦慮', reason:'舒緩緊張情緒，協助前調香氣自然融合'},
@@ -1875,10 +1908,12 @@ function resetSystem() {
     const el = document.getElementById(id);
     if(el) el.value = '';
   });
-  ['clientGender','birthMonth','useCase'].forEach(id => {
+  ['clientGender','useCase'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.selectedIndex = 0;
   });
+  const bm = document.getElementById('birthMonth');
+  if(bm) bm.value = '';
   goStep(1);
   [1,2,3,4].forEach(i => {
     const n = document.getElementById('nav'+i);
