@@ -153,6 +153,8 @@
 }
 </script>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+TC:wght@300;400;500&family=Lato:wght@300;400&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -892,7 +894,7 @@
     <div class="form-row">
       <div class="form-group">
         <label>出生年份</label>
-        <input type="number" id="birthYear" placeholder="例：1990" min="1930" max="2010">
+        <input type="number" id="birthYear" placeholder="例：1990" min="1930" max="2008" oninput="autoFillAge()">
       </div>
       <div class="form-group">
         <label>出生月份</label>
@@ -908,14 +910,15 @@
       </div>
       <div class="form-group">
         <label>出生日期</label>
-        <input type="number" id="birthDay" placeholder="日" min="1" max="31">
+        <input type="number" id="birthDay" placeholder="日" min="1" max="31" oninput="autoFillAge()">
       </div>
     </div>
 
     <div class="form-row form-row-2">
       <div class="form-group">
         <label>年齡</label>
-        <input type="number" id="clientAge" placeholder="例：34" min="1" max="100">
+        <input type="number" id="clientAge" placeholder="自動計算" min="1" max="100" readonly
+          style="background:rgba(138,158,127,0.06);color:var(--text-light);cursor:default">
       </div>
       <div class="form-group">
         <label>調香用途</label>
@@ -932,8 +935,9 @@
       </div>
     </div>
 
+    <div id="step1Error" style="display:none;color:#c0392b;font-size:0.82rem;font-family:'Lato',sans-serif;margin-top:-8px;margin-bottom:8px"></div>
     <div class="btn-group">
-      <button class="btn btn-primary" onclick="goStep(2)">下一步 →</button>
+      <button class="btn btn-primary" onclick="validateStep1()">下一步 →</button>
     </div>
   </div>
 
@@ -1056,7 +1060,7 @@
 
     <div class="btn-group">
       <button class="btn btn-secondary" onclick="goStep(2)">← 上一步</button>
-      <button class="btn btn-generate" onclick="generateReport()">✦ 生成專屬報告</button>
+      <button class="btn btn-generate" id="generateBtn" onclick="generateReport()">✦ 生成專屬報告</button>
     </div>
   </div>
 
@@ -1215,6 +1219,50 @@ function toggleTag(el) {
   el.classList.toggle('selected');
 }
 
+// Auto-calculate age from birth date
+function autoFillAge() {
+  const year = parseInt(document.getElementById('birthYear').value);
+  const month = parseInt(document.getElementById('birthMonth').value);
+  const day = parseInt(document.getElementById('birthDay').value);
+  if (!year || year < 1930) return;
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  if (month && day) {
+    const bday = new Date(year, month - 1, day);
+    const thisYear = new Date(today.getFullYear(), month - 1, day);
+    if (today < thisYear) age--;
+  }
+  if (age > 0 && age < 120) document.getElementById('clientAge').value = age;
+}
+
+// Month select change also triggers age calc
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('birthMonth').addEventListener('change', autoFillAge);
+});
+
+// Step 1 validation
+function validateStep1() {
+  const name = document.getElementById('clientName').value.trim();
+  const year = document.getElementById('birthYear').value;
+  const month = document.getElementById('birthMonth').value;
+  const day = document.getElementById('birthDay').value;
+  const errEl = document.getElementById('step1Error');
+
+  if (!name) {
+    errEl.textContent = '請填寫客戶姓名';
+    errEl.style.display = 'block';
+    document.getElementById('clientName').focus();
+    return;
+  }
+  if (!year || !month || !day) {
+    errEl.textContent = '請完整填寫出生年月日';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  goStep(2);
+}
+
 // Step navigation
 function goStep(n) {
   [1,2,3].forEach(i => {
@@ -1234,6 +1282,11 @@ function getSelectedSymptoms() {
 
 // Generate Report
 async function generateReport() {
+  const btn = document.getElementById('generateBtn');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '✦ 分析中…';
+
   const name = document.getElementById('clientName').value || '匿名客戶';
   const year = parseInt(document.getElementById('birthYear').value) || 1990;
   const month = parseInt(document.getElementById('birthMonth').value) || 6;
@@ -1327,14 +1380,17 @@ async function generateReport() {
 
   // ── 使用次數檢查 ──
   const clientData = { name, year, month, day, element, dayStem, dayGanzhi, tiangan, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote };
-  if (!checkUsageLimit(clientData, prompt)) return;
+  if (!checkUsageLimit(clientData, prompt)) {
+    const b = document.getElementById('generateBtn');
+    if (b) { b.disabled = false; b.textContent = '✦ 生成專屬報告'; }
+    return;
+  }
 
   await callGemini(prompt, clientData);
 }
 
 // ── 使用次數管理 ──
 const FREE_LIMIT = 2;
-const CERT_CODES = ['AROMA2025', 'THERAPIST88', 'FLORA2026']; // 可自訂多組認證碼
 
 function getUsageData() {
   const today = new Date().toDateString();
@@ -1384,7 +1440,7 @@ function showCertWall(clientData, prompt) {
       <div class="cert-input-wrap">
         <input type="text" id="certInput" placeholder="請輸入芳療師認證碼" autocomplete="off"
           style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
-        <button class="btn btn-primary" onclick="verifyCert('${encodeURIComponent(JSON.stringify({name:clientData.name,year:clientData.year,month:clientData.month,day:clientData.day}))}', prompt_placeholder)">
+        <button class="btn btn-primary" id="certUnlockBtn">
           解鎖使用
         </button>
       </div>
@@ -1404,8 +1460,7 @@ function showCertWall(clientData, prompt) {
   window._pendingClientData = clientData;
   window._pendingPrompt = prompt;
 
-  // Fix button onclick after render
-  report.querySelector('.btn-primary').onclick = verifyCertAndGenerate;
+  document.getElementById('certUnlockBtn').onclick = verifyCertAndGenerate;
   document.getElementById('nav4').classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1460,7 +1515,7 @@ async function verifyCertAndGenerate() {
 const WORKER_URL = 'https://aroma-therapist-api.fanyayajoin.workers.dev';
 
 async function callGemini(prompt, clientData) {
-  const { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote } = clientData;
+  const { name, year, month, day, element, dayStem, dayGanzhi, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood, eData, zodiacNote } = clientData;
   try {
     const res = await fetch(`${WORKER_URL}/api/generate`, {
       method: 'POST',
@@ -1480,7 +1535,7 @@ async function callGemini(prompt, clientData) {
     const result = JSON.parse(jsonMatch[0]);
 
     incrementUsage();
-    renderReport(result, { name, year, month, day, element, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood });
+    renderReport(result, { name, year, month, day, element, dayStem, dayGanzhi, zodiac, solarTerm, scentNames, symptoms, sleep, stress, energy, mood });
   } catch(e) {
     console.error('API Error:', e.message);
     renderFallback({ name, year, month, day, element, zodiac, solarTerm, eData, zodiacNote, scentNames, symptoms });
@@ -1493,6 +1548,8 @@ let currentClientData = null;
 
 function renderReport(r, d) {
   document.getElementById('loading').style.display = 'none';
+  const genBtn = document.getElementById('generateBtn');
+  if (genBtn) { genBtn.disabled = false; genBtn.textContent = '✦ 生成專屬報告'; }
   currentReportData = r;
   currentClientData = d;
 
@@ -1780,6 +1837,8 @@ function loadScript(src) {
 
 function renderFallback(d) {
   document.getElementById('loading').style.display = 'none';
+  const genBtn = document.getElementById('generateBtn');
+  if (genBtn) { genBtn.disabled = false; genBtn.textContent = '✦ 生成專屬報告'; }
   const fallback = {
     constitution: `${d.name}出生於${d.year}年，五行天干屬${d.element}，${d.zodiac}座，誕生於${d.solarTerm}時節。${d.eData.character}此體質在季節交替時特別容易感到疲憊，建議透過芳療建立穩定的身心儀式。`,
     symptom_analysis: d.symptoms.slice(0,4).map(s => ({
@@ -1815,6 +1874,10 @@ function resetSystem() {
   ['clientName','clientAge','birthYear','birthDay','dislikeScent','extraNotes'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = '';
+  });
+  ['clientGender','birthMonth','useCase'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.selectedIndex = 0;
   });
   goStep(1);
   [1,2,3,4].forEach(i => {
