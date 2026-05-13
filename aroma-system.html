@@ -1125,15 +1125,17 @@ async function generateReport() {
 
 【重要規則】
 1. 五行分析以「日主五行：${element}（${dayStem}）」為核心，這是最精準的命理依據
-2. 配方5支精油必須各不相同，禁止重複使用同一支精油
-3. 不可全部都用薰衣草，要根據症狀和體質選擇多元化精油
-4. 偏好香氣方向（${scentNames.join('、')||'未指定'}）要反映在配方選擇中
-5. 每支精油的reason必須結合客戶具體症狀說明
+2. symptom_analysis 必須為下列每個症狀各寫一條，且每條用不同精油，禁止重複：
+   ${symptoms.length ? symptoms.map((s,i)=>`症狀${i+1}：${s}`).join('、') : '體質調理'}
+3. 配方5支精油必須各不相同，禁止重複使用同一支精油
+4. 不可全部都用薰衣草，要根據症狀和體質選擇多元化精油
+5. 偏好香氣方向（${scentNames.join('、')||'未指定'}）要反映在配方選擇中
+6. 每支精油的reason必須結合客戶具體症狀說明
 
 請只回傳JSON，不含任何markdown符號：
 {
   "constitution": "150字以上體質深度分析，以日主五行${element}（天干${dayStem}）為核心，融合${zodiac}座能量、${solarTerm}節氣影響，說明身心特質與容易失衡方向",
-  "symptom_analysis": [{"symptom":"症狀名","oil":"對應精油（每個症狀用不同精油）","mechanism":"35字芳療機制說明"}],
+  "symptom_analysis": [${symptoms.length ? symptoms.map(s=>`{"symptom":"${s}","oil":"針對「${s}」最有效的精油（中英文），不可與其他症狀重複","mechanism":"此精油改善「${s}」的35字機制"}`).join(',\n    ') : '{"symptom":"體質調理","oil":"薰衣草 Lavender","mechanism":"平衡自律神經，促進身心放鬆與修復"}'}],
   "formula": [
     {"layer":"前調","oil":"精油A（具體名稱）","pct":25,"property":"主要功效成分","reason":"35字結合客戶症狀的選用理由"},
     {"layer":"前調","oil":"精油B（與A不同）","pct":10,"property":"主要功效成分","reason":"35字選用理由"},
