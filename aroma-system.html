@@ -6,7 +6,7 @@
 
 <!-- ── SEO 基礎 ── -->
 <title>芳香體質診斷系統｜AI 精油配方推薦・五行星座分析</title>
-<meta name="description" content="依據五行、星座、節氣與身體症狀，由 AI 芳療師生成專屬精油配方報告。提供擴香、滾珠、按摩三種用法，一鍵分享 LINE 或下載 PDF，芳療師諮詢必備工具。">
+<meta name="description" content="依據五行、星座與節氣，由 AI 芳療師生成專屬精油香氛配方報告。提供擴香、滾珠、按摩三種用法，一鍵分享 LINE 或下載 PDF，芳療師諮詢必備工具。">
 <meta name="keywords" content="精油配方,芳療診斷,五行精油,體質分析,AI芳療,精油推薦,薰衣草,乳香,佛手柑,芳香療法,精油諮詢,群獅整合行銷">
 <meta name="author" content="群獅整合行銷">
 <meta name="robots" content="index, follow">
@@ -17,7 +17,7 @@
 <meta property="og:locale" content="zh_TW">
 <meta property="og:site_name" content="群獅整合行銷">
 <meta property="og:title" content="芳香體質診斷系統｜AI 生成專屬精油配方">
-<meta property="og:description" content="輸入生日與身體症狀，AI 即時分析五行星座體質，生成個人化精油配方報告，支援 LINE 分享與 PDF 下載。">
+<meta property="og:description" content="輸入生日與香氣偏好，AI 即時分析五行星座體質，生成個人化精油香氛配方報告，支援 LINE 分享與 PDF 下載。">
 <meta property="og:url" content="https://fanyayajoin-lion.github.io/lionaroma/aroma-system.html">
 <meta property="og:image" content="https://fanyayajoin-lion.github.io/lionaroma/og-image.jpg">
 <meta property="og:image:width" content="1200">
@@ -59,7 +59,7 @@
         "星座能量解讀",
         "節氣養生建議",
         "AI 個人化精油配方生成",
-        "症狀對應精油推薦",
+        "身心關注香氛建議",
         "前中後調香氣配方",
         "PDF 報告下載",
         "LINE 一鍵分享"
@@ -73,7 +73,7 @@
           "name": "芳香體質診斷系統是什麼？",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "芳香體質診斷系統是一款 AI 驅動的芳療工具，芳療師輸入客戶的生日（用於計算五行天干、星座、節氣）與身體症狀後，系統自動生成一份包含體質分析、症狀對應精油、前中後調配方、使用建議的個人化精油報告，可下載 PDF 或直接分享至 LINE。"
+            "text": "芳香體質診斷系統是一款 AI 驅動的芳療工具，芳療師輸入客戶的生日（用於計算五行天干、星座、節氣）與身心關注方向後，系統自動生成一份包含體質分析、香氛建議、前中後調配方、使用建議的個人化精油報告，可下載 PDF 或直接分享至 LINE。"
           }
         },
         {
@@ -81,7 +81,7 @@
           "name": "精油配方如何根據體質推薦？",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "系統依據出生年份的天干計算五行屬性（木火土金水），結合生日對應的西洋星座與節氣，再配合選填的身體症狀（如失眠、焦慮、消化不良等），由 AI 生成針對個人體質的精油配方，每個症狀對應不同精油，確保配方多元且具針對性。"
+            "text": "系統依據出生年份的天干計算五行屬性（木火土金水），結合生日對應的西洋星座與節氣，再配合選填的身心關注方向，由 AI 生成針對個人體質的精油香氛配方，每個關注方向搭配不同香氛精油，確保配方多元且具個人特色。"
           }
         },
         {
@@ -132,7 +132,7 @@
           "@type": "HowToStep",
           "position": 3,
           "name": "評估身體狀態",
-          "text": "勾選目前困擾症狀（失眠、焦慮、疲勞、頭痛等 16 種），並完成睡眠、壓力、能量、情緒四項滑桿評分"
+          "text": "選填身心關注方向（如睡眠、壓力、情緒等），並完成睡眠、壓力、能量、情緒四項滑桿自評"
         },
         {
           "@type": "HowToStep",
@@ -984,11 +984,11 @@
 
   <!-- Step 3: Body Condition -->
   <div class="card" id="step3">
-    <div class="card-title">身體狀態評估</div>
-    <p class="card-desc">了解近期身心狀況，協助調配最適合的精油配方。</p>
+    <div class="card-title">身心狀態評估</div>
+    <p class="card-desc">了解近期身心狀況，協助調配最適合的精油香氛配方。本系統提供香氛配方建議，不具醫療效果，如有健康疑慮請諮詢醫療專業人員。</p>
 
     <div class="symptom-section">
-      <div class="symptom-title">目前困擾症狀（可複選）</div>
+      <div class="symptom-title">目前身心關注方向（可複選）</div>
       <div class="symptom-grid">
         <span class="symptom-tag" onclick="toggleTag(this)">失眠難入睡</span>
         <span class="symptom-tag" onclick="toggleTag(this)">多夢易醒</span>
@@ -1073,16 +1073,20 @@
 <!-- Footer -->
 <footer style="
   text-align:center;
-  padding:28px 24px;
+  padding:28px 24px 20px;
   margin-top:48px;
   border-top:1px solid rgba(138,158,127,0.2);
   font-family:'Lato',sans-serif;
-  font-size:0.78rem;
+  font-size:0.75rem;
   color:var(--text-light);
-  letter-spacing:0.12em;
   background:transparent;
 ">
-  Copyright &copy; 2025 群獅整合行銷 All Rights Reserved.
+  <p style="max-width:680px;margin:0 auto 14px;line-height:1.9;font-size:0.73rem;color:var(--text-light);letter-spacing:0.05em;">
+    ⚠ 本系統所提供之精油香氛配方僅供專業芳療師諮詢參考，不構成醫療診斷、醫療建議或療效宣稱。精油屬化妝品，無法預防、治療或改善任何疾病。如有身體不適，請諮詢合格醫療專業人員。
+  </p>
+  <p style="letter-spacing:0.12em;">
+    Copyright &copy; 2026 群獅整合行銷 All Rights Reserved.
+  </p>
 </footer>
 
 <script>
@@ -1184,18 +1188,18 @@ function getSolarTerm(month, day) {
 }
 
 const elementScents = {
-  '木': { base:'岩蘭草、廣藿香', mid:'天竺葵、薰衣草', top:'佛手柑、葡萄柚', character:'木型體質偏向條達疏泄，香氣選擇以舒肝理氣為主，清新的柑橘調搭配草本能量，有助放鬆緊繃的神經系統。' },
+  '木': { base:'岩蘭草、廣藿香', mid:'天竺葵、薰衣草', top:'佛手柑、葡萄柚', character:'木型體質個性靈活積極，香氣選擇以清新柑橘調搭配草本能量為主，帶來自在舒暢的感官體驗。' },
   '火': { base:'檀香、乳香', mid:'玫瑰草、天竺葵', top:'甜橙、萊姆', character:'火型體質能量旺盛，心火偏旺，選擇清涼降火的香氣，玫瑰草安撫心神，乳香引導能量向內沉澱。' },
   '土': { base:'廣藿香、岩蘭草', mid:'薰衣草、快樂鼠尾草', top:'甜橙、葡萄柚', character:'土型體質消化系統敏感，容易思慮過多，選擇溫暖大地氣息搭配柑橘，能舒緩脾胃、安定心神。' },
-  '金': { base:'雪松、檀香', mid:'尤加利、茶樹', top:'薄荷、迷迭香', character:'金型體質肺氣敏感，清肺潤燥為主軸，木質調搭配清涼草本，有助呼吸道健康與心智清晰。' },
-  '水': { base:'乳香、廣藿香', mid:'薑、黑胡椒', top:'萊姆、薄荷', character:'水型體質腎氣需要滋養，選擇溫暖辛香搭配神聖的樹脂類，補腎納氣、增強內在意志力。' },
+  '金': { base:'雪松、檀香', mid:'尤加利、茶樹', top:'薄荷、迷迭香', character:'金型體質思維縝密，偏好清晰明亮的氣息，木質調搭配清涼草本，帶來清新爽朗的感官體驗。' },
+  '水': { base:'乳香、廣藿香', mid:'薑、黑胡椒', top:'萊姆、薄荷', character:'水型體質富含智慧與耐力，選擇溫暖辛香搭配神聖的樹脂類，帶來深沉穩定的香氣感受。' },
 };
 
 const zodiacBlend = {
   '牡羊':'以黑胡椒與薑的辛香點火，增加行動力', '金牛':'以廣藿香穩定感官，喚醒大地連結',
   '雙子':'以佛手柑提亮思路，迷迭香強化溝通', '巨蟹':'以依蘭安撫情緒，薰衣草給予母性滋養',
   '獅子':'以乳香強化自信，甜橙散發陽光暖意', '處女':'以茶樹淨化細節，快樂鼠尾草放鬆過度思考',
-  '天秤':'以天竺葵平衡荷爾蒙，玫瑰草帶來和諧', '天蠍':'以沒藥深化轉化，廣藿香接地根本',
+  '天秤':'以天竺葵帶來和諧均衡的花香感受，玫瑰草散發溫柔舒適氣息', '天蠍':'以沒藥深化轉化，廣藿香接地根本',
   '射手':'以葡萄柚開展視野，雪松提供穩定基礎', '摩羯':'以岩蘭草強化目標，薑溫暖持久的意志',
   '水瓶':'以薄荷激發創新，迷迭香連結未來視野', '雙魚':'以橙花喚醒靈性，薰衣草包覆夢境邊界',
 };
@@ -1348,17 +1352,17 @@ async function generateReport() {
 
 【重要規則】
 1. 五行分析以「日主五行：${element}（${dayStem}）」為核心，這是最精準的命理依據
-2. symptom_analysis 必須為下列每個症狀各寫一條，且每條用不同精油，禁止重複：
-   ${symptoms.length ? symptoms.map((s,i)=>`症狀${i+1}：${s}`).join('、') : '體質調理'}
+2. symptom_analysis 必須為下列每個身心關注方向各寫一條，且每條用不同精油，禁止重複：
+   ${symptoms.length ? symptoms.map((s,i)=>`關注方向${i+1}：${s}`).join('、') : '體質香氛調理'}
 3. 配方5支精油必須各不相同，禁止重複使用同一支精油
-4. 不可全部都用薰衣草，要根據症狀和體質選擇多元化精油
+4. 不可全部都用薰衣草，要根據體質和香氣方向選擇多元化精油
 5. 偏好香氣方向（${scentNames.join('、')||'未指定'}）要反映在配方選擇中
-6. 每支精油的reason必須結合客戶具體症狀說明
+6. 每支精油的reason必須結合客戶體質與香氣偏好說明
 
 請只回傳JSON，不含任何markdown符號：
 {
   "constitution": "150字以上體質深度分析，以日主五行${element}（天干${dayStem}）為核心，融合${zodiac}座能量、${solarTerm}節氣影響，說明身心特質與容易失衡方向",
-  "symptom_analysis": [${symptoms.length ? symptoms.map(s=>`{"symptom":"${s}","oil":"針對「${s}」最有效的精油（中英文），不可與其他症狀重複","mechanism":"此精油改善「${s}」的35字機制"}`).join(',\n    ') : '{"symptom":"體質調理","oil":"薰衣草 Lavender","mechanism":"平衡自律神經，促進身心放鬆與修復"}'}],
+  "symptom_analysis": [${symptoms.length ? symptoms.map(s=>`{"symptom":"${s}","oil":"搭配「${s}」關注方向最適合的精油（中英文），不可與其他項目重複","mechanism":"此精油帶來的35字香氣感受與使用體驗，以感官描述為主，不宣稱療效"}`).join(',\n    ') : '{"symptom":"體質香氛調理","oil":"薰衣草 Lavender","mechanism":"清甜花草香氣，帶來輕鬆自在的感官體驗，適合在靜心時刻使用"}'}],
   "formula": [
     {"layer":"前調","oil":"精油A（具體名稱）","pct":25,"property":"主要功效成分","reason":"35字結合客戶症狀的選用理由"},
     {"layer":"前調","oil":"精油B（與A不同）","pct":10,"property":"主要功效成分","reason":"35字選用理由"},
@@ -1614,7 +1618,7 @@ function renderReport(r, d) {
     <!-- 症狀對應 -->
     ${(r.symptom_analysis && r.symptom_analysis.length) ? `
     <div class="report-section">
-      <div class="report-section-title">症狀對應精油說明</div>
+      <div class="report-section-title">身心關注香氛建議</div>
       <div class="symptom-analysis-grid">${symptomHtml}</div>
     </div>` : ''}
 
@@ -1722,7 +1726,7 @@ function shareToLine() {
 ${r.constitution}
 
 ━━━━━━━━━━━━━━
-${sympText ? `✦ 症狀對應精油\n${sympText}\n\n━━━━━━━━━━━━━━\n` : ''}
+${sympText ? `✦ 身心關注香氛建議\n${sympText}\n\n━━━━━━━━━━━━━━\n` : ''}
 ✦ 專屬精油配方
 ${formulaText}
 
@@ -1859,22 +1863,22 @@ function renderFallback(d) {
         return oilPool[idx % oilPool.length];
       };
       const symptomOilMap = {
-        '失眠難入睡': { oil: '真正薰衣草', mech: '富含乙酸沉香酯，調節 GABA 受體，降低皮質醇，縮短入睡時間' },
-        '多夢易醒': { oil: '羅馬洋甘菊', mech: '天藍烴成分安撫神經過度活躍，穩定深層睡眠週期' },
-        '焦慮緊張': { oil: '佛手柑', mech: '佛手柑烯平衡自律神經，降低腎上腺素分泌，緩解焦慮感' },
-        '情緒低落': { oil: '甜橙', mech: '柑橘烯刺激多巴胺分泌，溫暖振奮情緒，帶來正向能量' },
-        '容易疲勞': { oil: '桉油醇迷迭香', mech: '1,8-桉葉素促進大腦血氧循環，消除疲勞感，提升體力' },
-        '注意力不集中': { oil: '薄荷', mech: '薄荷醇刺激大腦清醒系統，提升專注力與認知靈敏度' },
-        '頭痛頭暈': { oil: '薄荷', mech: '薄荷醇局部塗抹太陽穴，舒張血管、降低頭部緊張壓力' },
-        '肩頸僵硬': { oil: '黑胡椒', mech: '胡椒鹼促進局部血液循環，溫熱放鬆深層肌筋膜緊繃' },
-        '消化不良': { oil: '甜茴香', mech: '反式洋茴香腦舒緩腸道痙攣，促進消化酵素分泌' },
-        '月經不順': { oil: '快樂鼠尾草', mech: '含植物雌激素類成分，平衡荷爾蒙，調理月經週期' },
-        '皮膚乾燥': { oil: '天竺葵', mech: '香茅醇調節皮脂分泌，促進細胞再生，改善皮膚屏障功能' },
-        '免疫力下降': { oil: '茶樹', mech: '萜品烯-4-醇激活免疫細胞，提升自然殺手細胞活性' },
-        '呼吸道敏感': { oil: '尤加利', mech: '1,8-桉葉素抗菌消炎、舒張支氣管，暢通呼吸道' },
-        '手腳冰冷': { oil: '薑', mech: '薑辣素促進末梢血液循環，溫暖四肢、改善陽虛體質' },
-        '水腫': { oil: '杜松漿果', mech: '萜品醇利尿排毒，促進淋巴循環，消除下肢水腫' },
-        '情緒起伏大': { oil: '岩蘭草', mech: '倍半萜烯接地安神，穩定過度活躍的情緒中樞' },
+        '失眠難入睡': { oil: '真正薰衣草', mech: '清甜花草香氣，營造舒緩放鬆的就寢環境氛圍，適合睡前使用' },
+        '多夢易醒': { oil: '羅馬洋甘菊', mech: '柔和甘甜的蘋果花香，帶來平靜舒適的夜晚氛圍感受' },
+        '焦慮緊張': { oil: '佛手柑', mech: '清新怡人的柑橘香氣，帶來開朗愉快的感官體驗，適合舒壓時使用' },
+        '情緒低落': { oil: '甜橙', mech: '溫暖甜美的橙香，散發活潑愉悅的氣息，帶來振奮心情的香氣體驗' },
+        '容易疲勞': { oil: '桉油醇迷迭香', mech: '清涼草本氣息，帶來清新振奮的感官感受，適合需要活力的時刻使用' },
+        '注意力不集中': { oil: '薄荷', mech: '清涼爽快的薄荷香氣，帶來清新醒腦的感官體驗，適合工作學習時使用' },
+        '頭痛頭暈': { oil: '薄荷', mech: '清涼爽快的薄荷香氣，帶來清新舒爽的頭部感官體驗' },
+        '肩頸僵硬': { oil: '黑胡椒', mech: '溫暖辛香的黑胡椒氣息，帶來溫熱舒適的身體按摩香氛感受' },
+        '消化不良': { oil: '甜茴香', mech: '溫暖香甜的茴香氣息，帶來溫暖舒適的腹部按摩香氛體驗' },
+        '月經不順': { oil: '快樂鼠尾草', mech: '溫潤草本的快樂鼠尾草，帶來舒適放鬆的女性身心香氛體驗' },
+        '皮膚乾燥': { oil: '天竺葵', mech: '清新花香的天竺葵，帶來舒適滋潤的肌膚按摩香氛體驗' },
+        '免疫力下降': { oil: '茶樹', mech: '清新潔淨的茶樹氣息，營造清新舒適的室內擴香環境' },
+        '呼吸道敏感': { oil: '尤加利', mech: '清涼通透的尤加利氣息，帶來清新舒暢的空氣環境感受' },
+        '手腳冰冷': { oil: '薑', mech: '溫暖辛香的薑氣息，帶來溫熱舒適的按摩香氛全身感受' },
+        '水腫': { oil: '杜松漿果', mech: '清新木質的杜松漿果，帶來輕盈舒爽的身體按摩香氛感受' },
+        '情緒起伏大': { oil: '岩蘭草', mech: '深沉穩重的岩蘭草香氣，帶來踏實安定的接地氣息感受' },
       };
       if (symptomOilMap[s]) return { symptom: s, oil: symptomOilMap[s].oil, mechanism: symptomOilMap[s].mech };
       return { symptom: s, oil: pick(i), mechanism: '針對此症狀，選用具有平衡植物化學成分的精油，協助身心恢復平衡' };
@@ -1882,7 +1886,7 @@ function renderFallback(d) {
     formula: [
       {layer:'前調', oil: d.eData.top.split('、')[0], pct:25, property:'單帖烯類·提振活化', reason:'帶來清新明亮的開場，迅速提振感官，呼應柑橘偏好'},
       {layer:'前調', oil: d.eData.top.split('、')[1]||'佛手柑', pct:10, property:'酯類·抗焦慮', reason:'舒緩緊張情緒，協助前調香氣自然融合'},
-      {layer:'中調', oil: d.eData.mid.split('、')[0], pct:30, property:'醇類·平衡荷爾蒙', reason:`${d.zodiacNote}，平衡心身核心能量`},
+      {layer:'中調', oil: d.eData.mid.split('、')[0], pct:30, property:'醇類·和諧舒適', reason:`${d.zodiacNote}，帶來身心和諧的香氣感受`},
       {layer:'中調', oil: d.eData.mid.split('、')[1]||'天竺葵', pct:20, property:'酯類·安撫神經', reason:'強化中調深度，對應五行'+d.element+'的調理需求'},
       {layer:'後調', oil: d.eData.base.split('、')[0], pct:15, property:'倍半帖烯·接地穩定', reason:'提供溫暖持久的基底，增強整體配方的留香度'},
     ],
